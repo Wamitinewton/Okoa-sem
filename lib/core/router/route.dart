@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 enum AppRoute {
-  splash('/');
+  splash('/'),
+  onboarding('/onboarding');
+
   const AppRoute(this.path);
 
   final String path;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:okoa_sem/core/config/app_config.dart'; 
+import 'package:okoa_sem/core/config/app_config.dart';
+import 'package:okoa_sem/core/router/route.dart'; 
 import 'package:okoa_sem/shared/painters/background_painter.dart';
 
 
@@ -131,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    // AppRoute.onboarding.go(context);
+    AppRoute.onboarding.go(context);
   }
 
   @override
