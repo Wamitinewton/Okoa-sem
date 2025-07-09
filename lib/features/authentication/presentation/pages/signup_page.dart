@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
+import 'package:okoa_sem/core/utils/validation_utils.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
 import '../widgets/custom_input_field.dart';
@@ -45,43 +46,6 @@ class _SignupPageState extends State<SignupPage>
     _passwordController.dispose();
     _backgroundController.dispose();
     super.dispose();
-  }
-
-  String? _validateUsername(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Username is required';
-    }
-    if (value.length < 3) {
-      return 'Username must be at least 3 characters';
-    }
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-      return 'Username can only contain letters, numbers, and underscores';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
-    }
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
-      return 'Password must contain uppercase, lowercase, and number';
-    }
-    return null;
   }
 
   void _handleSignup() {
@@ -179,7 +143,7 @@ class _SignupPageState extends State<SignupPage>
                               keyboardType: TextInputType.text,
                               textInputAction: TextInputAction.next,
                               isRequired: true,
-                              validator: _validateUsername,
+                              validator: ValidationUtils.validateUsername,
                               prefixIcon: Icon(
                                 Icons.person_outline,
                                 color: context.colors.surfaceAlpha(0.7),
@@ -196,7 +160,7 @@ class _SignupPageState extends State<SignupPage>
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               isRequired: true,
-                              validator: _validateEmail,
+                              validator: ValidationUtils.validateEmail,
                               prefixIcon: Icon(
                                 Icons.email_outlined,
                                 color: context.colors.surfaceAlpha(0.7),
@@ -213,7 +177,7 @@ class _SignupPageState extends State<SignupPage>
                               isPassword: true,
                               textInputAction: TextInputAction.done,
                               isRequired: true,
-                              validator: _validatePassword,
+                              validator: ValidationUtils.validateStrongPassword,
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: context.colors.surfaceAlpha(0.7),

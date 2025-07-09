@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
+import 'package:okoa_sem/core/utils/validation_utils.dart'; 
 import '../widgets/custom_input_field.dart';
 import '../widgets/auth_widgets.dart';
 import '../bloc/auth_bloc.dart';
@@ -43,23 +44,6 @@ class _LoginPageState extends State<LoginPage>
     _passwordController.dispose();
     _backgroundController.dispose();
     super.dispose();
-  }
-
-  String? _validateEmailOrUsername(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email or username is required';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
   }
 
   void _handleLogin() {
@@ -139,13 +123,11 @@ class _LoginPageState extends State<LoginPage>
                     
                     SizedBox(height: context.sizing.xxl),
                     
-                    // Form Container
                     AuthFormContainer(
                       child: Form(
                         key: _formKey,
                         child: Column(
                           children: [
-                            // Email/Username Field
                             CustomInputField(
                               label: 'Email or Username',
                               hintText: 'Enter your email or username',
@@ -153,7 +135,7 @@ class _LoginPageState extends State<LoginPage>
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
                               isRequired: true,
-                              validator: _validateEmailOrUsername,
+                              validator: ValidationUtils.validateEmailOrUsername,
                               prefixIcon: Icon(
                                 Icons.person_outline,
                                 color: context.colors.surfaceAlpha(0.7),
@@ -163,7 +145,6 @@ class _LoginPageState extends State<LoginPage>
                             
                             SizedBox(height: context.sizing.l),
                             
-                            // Password Field
                             CustomInputField(
                               label: 'Password',
                               hintText: 'Enter your password',
@@ -171,7 +152,7 @@ class _LoginPageState extends State<LoginPage>
                               isPassword: true,
                               textInputAction: TextInputAction.done,
                               isRequired: true,
-                              validator: _validatePassword,
+                              validator: ValidationUtils.validatePassword,
                               prefixIcon: Icon(
                                 Icons.lock_outline,
                                 color: context.colors.surfaceAlpha(0.7),
@@ -181,7 +162,6 @@ class _LoginPageState extends State<LoginPage>
                             
                             SizedBox(height: context.sizing.s),
                             
-                            // Forgot Password
                             Align(
                               alignment: Alignment.centerRight,
                               child: GestureDetector(
@@ -199,7 +179,6 @@ class _LoginPageState extends State<LoginPage>
                             
                             SizedBox(height: context.sizing.xl),
                             
-                            // Login Button
                             BlocBuilder<AuthBloc, AuthState>(
                               builder: (context, state) {
                                 return AuthButton(
@@ -216,12 +195,10 @@ class _LoginPageState extends State<LoginPage>
                     
                     SizedBox(height: context.sizing.xl),
                     
-                    // Divider
                     const AuthDivider(),
                     
                     SizedBox(height: context.sizing.xl),
                     
-                    // Footer
                     Center(
                       child: AuthFooter(
                         questionText: "Don't have an account?",
