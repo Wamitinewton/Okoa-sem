@@ -18,9 +18,8 @@ class BackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final alpha = (0.05 * animationValue * 255).clamp(0, 255).toDouble();
     final paint = Paint()
-      ..color = (color ?? AppColors.primary).withValues(alpha: alpha)
+      ..color = (color ?? AppColors.primary).withOpacity(0.05 * animationValue)
       ..strokeWidth = strokeWidth ?? _calculateStrokeWidth(size)
       ..style = PaintingStyle.stroke;
 

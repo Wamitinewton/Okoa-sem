@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
+import 'package:okoa_sem/core/router/route.dart';
 import 'package:okoa_sem/features/onboarding/models/onboarding_data.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_page_widget.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_widgets.dart';
@@ -93,28 +94,7 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   void _getStarted() {
     _triggerHapticFeedback();
-    _fadeController.reverse().then((_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Welcome to Okoa Sem! 🎉',
-              style: context.typography.bodyM.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(context.sizing.radiusM),
-            ),
-            margin: EdgeInsets.all(context.sizing.m),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    });
+    AppRoute.login.go(context);
   }
 
   @override
