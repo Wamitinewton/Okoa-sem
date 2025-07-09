@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:okoa_sem/core/config/app_colors.dart';
+import 'package:okoa_sem/core/config/app_theme.dart';
 import 'package:okoa_sem/core/router/router.dart';
-import 'package:okoa_sem/core/theme/style.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
   
-  // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: Color(0xFF010201),
+      systemNavigationBarColor: AppColors.surfaceDark,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -34,8 +33,18 @@ class OkoaSemApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Okoa Sem - Your Academic Success Partner',
       debugShowCheckedModeBanner: false,
-      theme: darkTheme,
+      theme: AppTheme.responsiveTheme(context),
       routerConfig: router,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(
+              MediaQuery.of(context).textScaler.scale(1.0).clamp(0.8, 1.3),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

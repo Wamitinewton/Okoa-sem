@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:okoa_sem/core/config/asset_constants.dart';
+import 'package:okoa_sem/core/config/app_config.dart'; 
 import 'package:okoa_sem/shared/painters/background_painter.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -46,13 +47,11 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    // Background Animation Controller
     _backgroundController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
-    // Particle Animation Controller
     _particleController = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
@@ -72,10 +71,12 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _logoSlide = Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
-        );
+    _logoSlide = Tween<Offset>(
+      begin: const Offset(0, -0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
+    );
 
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -84,10 +85,12 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
-        );
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
+    );
 
     _subtitleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -96,15 +99,16 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _subtitleSlide =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _textController,
-            curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
-          ),
-        );
+    _subtitleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _textController,
+        curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
+      ),
+    );
 
-    // Background Animations
     _backgroundOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
     );
@@ -114,7 +118,6 @@ class _SplashScreenState extends State<SplashScreen>
     HapticFeedback.lightImpact();
 
     _backgroundController.forward();
-
     _particleController.repeat();
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -123,53 +126,52 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 800));
     _textController.forward();
 
-    // Navigate After animation complete
     await Future.delayed(const Duration(milliseconds: 2500));
     _navigateToNext();
   }
 
   void _navigateToNext() {
-    // Call Go router
+    // AppRoute.onboarding.go(context);
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    _textController.dispose();
+    _backgroundController.dispose();
+    _particleController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: context.colors.surface,
       body: Stack(
         children: [
-          _buildAnimatedBackground(size),
-
-          _buildMainContent(theme, size),
-
-          _buildLoadingIndicator(theme),
+          _buildAnimatedBackground(),
+          _buildMainContent(),
+          _buildLoadingIndicator(),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedBackground(Size size) {
+  Widget _buildAnimatedBackground() {
     return AnimatedBuilder(
       animation: _backgroundController,
       builder: (context, child) {
         return Opacity(
           opacity: _backgroundOpacity.value,
           child: Container(
-            width: size.width,
-            height: size.height,
-            decoration: BoxDecoration(
+            width: context.screenWidth,
+            height: context.screenHeight,
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF010201),
-                  const Color(0xFF171717).withOpacity(0.8),
-                  const Color(0xFF010201),
-                ],
-                stops: const [0.0, 0.5, 1.0],
+                colors: AppColors.backgroundGradient,
+                stops: [0.0, 0.5, 1.0],
               ),
             ),
             child: CustomPaint(
@@ -181,25 +183,18 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildMainContent(ThemeData theme, Size size) {
+  Widget _buildMainContent() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Logo Section
           _buildLogoSection(),
-
-          const SizedBox(height: 48),
-
-          // Text Section
-          _buildTextSection(theme),
-
-          const SizedBox(height: 24),
-
-          // Tagline
-          _buildTaglineSection(theme),
+          SizedBox(height: context.sizing.xxl),
+          _buildTextSection(),
+          SizedBox(height: context.sizing.l),
+          _buildTaglineSection(),
         ],
-      ),
+      ).paddingH(context, 24),
     );
   }
 
@@ -207,8 +202,7 @@ class _SplashScreenState extends State<SplashScreen>
     return AnimatedBuilder(
       animation: Listenable.merge([_logoController]),
       builder: (context, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final logoSize = screenWidth * 0.5;
+        final logoSize = context.sizing.widthPercent(50);
 
         return SlideTransition(
           position: _logoSlide,
@@ -220,37 +214,37 @@ class _SplashScreenState extends State<SplashScreen>
                 width: logoSize,
                 height: logoSize,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(context.sizing.radiusXL),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFC5F432).withOpacity(0.3),
-                      blurRadius: 30,
-                      spreadRadius: 5,
+                      color: context.colors.primaryAlpha(0.3),
+                      blurRadius: context.sizing.size(30),
+                      spreadRadius: context.sizing.size(5),
                     ),
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: context.colors.overlay,
+                      blurRadius: context.sizing.size(20),
+                      offset: Offset(0, context.sizing.size(10)),
                     ),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(context.sizing.radiusXL),
                   child: Image.asset(
                     AssetConstants.mustLogo,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(context.sizing.radiusXL),
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFC5F432), Color(0xFFC09FF8)],
+                            colors: AppColors.primaryGradient,
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.school,
-                          size: 60,
-                          color: Colors.black,
+                          size: context.sizing.size(60),
+                          color: context.colors.onPrimary,
                         ),
                       );
                     },
@@ -264,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildTextSection(ThemeData theme) {
+  Widget _buildTextSection() {
     return AnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
@@ -274,37 +268,22 @@ class _SplashScreenState extends State<SplashScreen>
               position: _titleSlide,
               child: FadeTransition(
                 opacity: _titleOpacity,
-                child: ShaderMask(
-                  shaderCallback: (bounds) {
-                    return const LinearGradient(
-                      colors: [Color(0xFFC5F432), Color(0xFFC09FF8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds);
-                  },
-                  child: Text(
-                    'Okoa Sem',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+                child: context.typography.gradientText(
+                  'Okoa Sem',
+                  style: context.typography.appTitle,
+                  colors: AppColors.primaryGradient,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: context.sizing.s),
             SlideTransition(
               position: _subtitleSlide,
               child: FadeTransition(
                 opacity: _subtitleOpacity,
                 child: Text(
                   'Your Academic Success Partner',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: context.typography.subtitle,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -314,28 +293,32 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildTaglineSection(ThemeData theme) {
+  Widget _buildTaglineSection() {
     return AnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
         return FadeTransition(
           opacity: _subtitleOpacity,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.sizing.l,
+              vertical: context.sizing.s,
+            ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(context.sizing.radiusL),
               border: Border.all(
-                color: const Color(0xFFC5F432).withOpacity(0.3),
-                width: 1,
+                color: context.colors.primaryAlpha(0.3),
+                width: context.sizing.size(1),
               ),
-              color: const Color(0xFFC5F432).withOpacity(0.1),
+              color: context.colors.primaryAlpha(0.1),
             ),
             child: Text(
               '📚 Past Papers • Study Materials • Exam Prep',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFFC5F432),
+              style: context.typography.bodyM.copyWith(
+                color: context.colors.primary,
                 fontWeight: FontWeight.w500,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
         );
@@ -343,9 +326,9 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildLoadingIndicator(ThemeData theme) {
+  Widget _buildLoadingIndicator() {
     return Positioned(
-      bottom: 80,
+      bottom: context.sizing.size(80) + MediaQuery.of(context).padding.bottom,
       left: 0,
       right: 0,
       child: AnimatedBuilder(
@@ -356,21 +339,20 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               children: [
                 SizedBox(
-                  width: 40,
-                  height: 40,
+                  width: context.sizing.size(40),
+                  height: context.sizing.size(40),
                   child: CircularProgressIndicator(
-                    strokeWidth: 3,
+                    strokeWidth: context.sizing.size(3),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      const Color(0xFFC5F432),
+                      context.colors.primary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: context.sizing.m),
                 Text(
                   'Preparing your study materials...',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white60,
-                  ),
+                  style: context.typography.caption,
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
