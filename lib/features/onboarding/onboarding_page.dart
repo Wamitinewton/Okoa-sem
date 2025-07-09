@@ -4,6 +4,7 @@ import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/features/onboarding/models/onboarding_data.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_page_widget.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_widgets.dart';
+import 'package:okoa_sem/shared/widgets/universal_background.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -15,8 +16,8 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage>
     with TickerProviderStateMixin {
   late PageController _pageController;
-  late AnimationController _buttonController;
-  late AnimationController _indicatorController;
+  late AnimationController _fadeController;
+  late AnimationController _backgroundController;
   
   int _currentPage = 0;
   bool _isAnimating = false;
@@ -25,9 +26,10 @@ class _OnboardingPageState extends State<OnboardingPage>
   void initState() {
     super.initState();
     _initializeControllers();
-    _setupPageController();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fadeController.forward();
+      _backgroundController.forward();
       _triggerHapticFeedback();
     });
   }
@@ -35,37 +37,15 @@ class _OnboardingPageState extends State<OnboardingPage>
   void _initializeControllers() {
     _pageController = PageController();
     
-    _buttonController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     
-    _indicatorController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+    _backgroundController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    _buttonController.forward();
-    _indicatorController.forward();
-  }
-
-  void _setupPageController() {
-    _pageController.addListener(() {
-      final page = _pageController.page;
-      if (page != null && !_isAnimating) {
-        final newPage = page.round();
-        if (newPage != _currentPage) {
-          _updateCurrentPage(newPage);
-        }
-      }
-    });
-  }
-
-  void _updateCurrentPage(int newPage) {
-    setState(() {
-      _currentPage = newPage;
-    });
-    _triggerHapticFeedback();
   }
 
   void _triggerHapticFeedback() {
@@ -80,14 +60,13 @@ class _OnboardingPageState extends State<OnboardingPage>
       final nextPageIndex = _currentPage + 1;
       
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
       ).then((_) {
-        // Fixed: Ensure the page state is updated after animation completes
-        if (mounted) {
-          _updateCurrentPage(nextPageIndex);
-        }
-        _isAnimating = false;
+        setState(() {
+          _currentPage = nextPageIndex;
+          _isAnimating = false;
+        });
       });
     }
   }
@@ -101,21 +80,20 @@ class _OnboardingPageState extends State<OnboardingPage>
       
       _pageController.animateToPage(
         lastPageIndex,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
       ).then((_) {
-        // Fixed: Ensure the page state is updated after animation completes
-        if (mounted) {
-          _updateCurrentPage(lastPageIndex);
-        }
-        _isAnimating = false;
+        setState(() {
+          _currentPage = lastPageIndex;
+          _isAnimating = false;
+        });
       });
     }
   }
 
   void _getStarted() {
     _triggerHapticFeedback();
-    _buttonController.reverse().then((_) {
+    _fadeController.reverse().then((_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -132,7 +110,7 @@ class _OnboardingPageState extends State<OnboardingPage>
               borderRadius: BorderRadius.circular(context.sizing.radiusM),
             ),
             margin: EdgeInsets.all(context.sizing.m),
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -142,169 +120,156 @@ class _OnboardingPageState extends State<OnboardingPage>
   @override
   void dispose() {
     _pageController.dispose();
-    _buttonController.dispose();
-    _indicatorController.dispose();
+    _fadeController.dispose();
+    _backgroundController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surfaceDark,
       body: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: OnboardingData.pages.length,
-            onPageChanged: (index) {
-              // Fixed: Only update if not animating programmatically
-              if (!_isAnimating) {
-                _updateCurrentPage(index);
-              }
-            },
-            itemBuilder: (context, index) {
-              return OnboardingPageWidget(
-                pageData: OnboardingData.pages[index],
-                isActive: index == _currentPage,
-              );
-            },
+          UniversalBackground(animation: _backgroundController),
+          
+          SafeArea(
+            child: FadeTransition(
+              opacity: _fadeController,
+              child: Column(
+                children: [
+                  _buildTopSection(),
+                  
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: OnboardingData.pages.length,
+                      onPageChanged: (index) {
+                        if (!_isAnimating) {
+                          setState(() {
+                            _currentPage = index;
+                          });
+                          _triggerHapticFeedback();
+                        }
+                      },
+                      itemBuilder: (context, index) {
+                        return OnboardingPageWidget(
+                          pageData: OnboardingData.pages[index],
+                          isActive: index == _currentPage,
+                        );
+                      },
+                    ),
+                  ),
+                  
+                  _buildBottomNavigation(),
+                ],
+              ),
+            ),
           ),
-          
-          _buildTopSection(),
-          
-          _buildBottomSection(),
         ],
       ),
     );
   }
 
   Widget _buildTopSection() {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        child: AnimatedBuilder(
-          animation: _buttonController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, -50 * (1 - _buttonController.value)),
-              child: Opacity(
-                opacity: _buttonController.value,
-                child: Padding(
-                  padding: EdgeInsets.all(context.sizing.l),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(context.sizing.s),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(context.sizing.radiusM),
-                            ),
-                            child: Icon(
-                              Icons.school,
-                              color: AppColors.onPrimary,
-                              size: context.sizing.iconM,
-                            ),
-                          ),
-                          SizedBox(width: context.sizing.s),
-                          Text(
-                            'Okoa Sem',
-                            style: context.typography.titleM.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      if (_currentPage < OnboardingData.pages.length - 1)
-                        TextButton(
-                          onPressed: _skipToEnd,
-                          style: TextButton.styleFrom(
-                            foregroundColor: context.colors.surfaceAlpha(0.7),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: context.sizing.m,
-                              vertical: context.sizing.s,
-                            ),
-                          ),
-                          child: Text(
-                            'Skip',
-                            style: context.typography.labelL.copyWith(
-                              color: context.colors.surfaceAlpha(0.7),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+    return Container(
+      padding: EdgeInsets.all(context.sizing.l),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(context.sizing.s),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(context.sizing.radiusM),
+                ),
+                child: Icon(
+                  Icons.school,
+                  color: AppColors.onPrimary,
+                  size: context.sizing.iconM,
                 ),
               ),
-            );
-          },
-        ),
+              SizedBox(width: context.sizing.s),
+              Text(
+                'Okoa Sem',
+                style: context.typography.titleL.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const Spacer(),
+              if (_currentPage < OnboardingData.pages.length - 1)
+                TextButton(
+                  onPressed: _skipToEnd,
+                  style: TextButton.styleFrom(
+                    foregroundColor: context.colors.surfaceAlpha(0.7),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.sizing.m,
+                      vertical: context.sizing.s,
+                    ),
+                  ),
+                  child: Text(
+                    'Skip',
+                    style: context.typography.labelL.copyWith(
+                      color: context.colors.surfaceAlpha(0.7),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          
+          SizedBox(height: context.sizing.l),
+          
+          OnboardingPageIndicator(
+            currentPage: _currentPage,
+            totalPages: OnboardingData.pages.length,
+            activeColor: AppColors.primary,
+            inactiveColor: AppColors.disabled,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBottomSection() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: SafeArea(
-        child: AnimatedBuilder(
-          animation: _indicatorController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, 100 * (1 - _indicatorController.value)),
-              child: Opacity(
-                opacity: _indicatorController.value,
-                child: Container(
-                  padding: EdgeInsets.all(context.sizing.l),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        AppColors.surfaceDark.withValues(alpha: 0.8),
-                        AppColors.surfaceDark,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Page Indicator
-                      OnboardingPageIndicator(
-                        currentPage: _currentPage,
-                        totalPages: OnboardingData.pages.length,
-                        activeColor: OnboardingData.pages[_currentPage].gradientColors.first,
-                        inactiveColor: AppColors.disabled,
-                      ),
-                      
-                      SizedBox(height: context.sizing.xl),
-                      
-                      // Navigation Buttons
-                      OnboardingNavigationButtons(
-                        currentPage: _currentPage,
-                        totalPages: OnboardingData.pages.length,
-                        onNext: _nextPage,
-                        onSkip: _skipToEnd,
-                        onGetStarted: _getStarted,
-                      ),
-                      
-                      SizedBox(height: context.sizing.s),
-                    ],
-                  ),
+  Widget _buildBottomNavigation() {
+    final isLastPage = _currentPage == OnboardingData.pages.length - 1;
+    
+    return Container(
+      padding: EdgeInsets.all(context.sizing.l),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isLastPage ? _getStarted : _nextPage,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+            padding: EdgeInsets.symmetric(
+              vertical: context.sizing.m,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(context.sizing.radiusL),
+            ),
+            elevation: 4,
+            shadowColor: AppColors.primary.withValues(alpha: 0.3),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                isLastPage ? 'Get Started' : 'Next',
+                style: context.typography.labelL.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onPrimary,
                 ),
               ),
-            );
-          },
+              SizedBox(width: context.sizing.s),
+              Icon(
+                isLastPage ? Icons.rocket_launch : Icons.arrow_forward,
+                size: context.sizing.iconS,
+                color: AppColors.onPrimary,
+              ),
+            ],
+          ),
         ),
       ),
     );

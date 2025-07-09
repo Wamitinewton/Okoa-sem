@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/core/router/route.dart'; 
-import 'package:okoa_sem/shared/painters/background_painter.dart';
+import 'package:okoa_sem/shared/widgets/universal_background.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -16,8 +16,9 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
-  late AnimationController _backgroundController;
   late AnimationController _particleController;
+    late AnimationController _backgroundController;
+
 
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
@@ -28,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _subtitleOpacity;
   late Animation<Offset> _subtitleSlide;
 
-  late Animation<double> _backgroundOpacity;
 
   @override
   void initState() {
@@ -38,6 +38,11 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _initializeAnimations() {
+    _backgroundController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -45,11 +50,6 @@ class _SplashScreenState extends State<SplashScreen>
 
     _textController = AnimationController(
       duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _backgroundController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
@@ -110,15 +110,14 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _backgroundOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
-    );
+  
   }
 
   void _startAnimationSequence() async {
     HapticFeedback.lightImpact();
 
     _backgroundController.forward();
+
     _particleController.repeat();
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -137,9 +136,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _backgroundController.dispose();
     _logoController.dispose();
     _textController.dispose();
-    _backgroundController.dispose();
     _particleController.dispose();
     super.dispose();
   }
@@ -150,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: context.colors.surface,
       body: Stack(
         children: [
-          _buildAnimatedBackground(),
+          UniversalBackground(animation: _backgroundController),
           _buildMainContent(),
           _buildLoadingIndicator(),
         ],
@@ -158,31 +157,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildAnimatedBackground() {
-    return AnimatedBuilder(
-      animation: _backgroundController,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _backgroundOpacity.value,
-          child: Container(
-            width: context.screenWidth,
-            height: context.screenHeight,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: AppColors.backgroundGradient,
-                stops: [0.0, 0.5, 1.0],
-              ),
-            ),
-            child: CustomPaint(
-              painter: BackgroundPainter(_backgroundOpacity.value),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildMainContent() {
     return Center(

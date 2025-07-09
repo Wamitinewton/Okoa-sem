@@ -5,18 +5,14 @@ class OnboardingPageData {
   final String subtitle;
   final String description;
   final IconData icon;
-  final List<Color> gradientColors;
   final List<OnboardingFeature> features;
-  final String imagePath;
 
   const OnboardingPageData({
     required this.title,
     required this.subtitle,
     required this.description,
     required this.icon,
-    required this.gradientColors,
     required this.features,
-    required this.imagePath,
   });
 }
 
@@ -39,8 +35,6 @@ class OnboardingData {
       subtitle: 'By School & Department',
       description: 'Search and access past papers from your specific school and department. Never miss an exam question pattern again.',
       icon: Icons.school_outlined,
-      gradientColors: [Color(0xFFC5F432), Color(0xFF8BC34A)],
-      imagePath: 'assets/images/search_papers.png',
       features: [
         OnboardingFeature(
           icon: Icons.search,
@@ -64,8 +58,6 @@ class OnboardingData {
       subtitle: 'Find Questions Instantly',
       description: 'Type any topic or unit you\'re studying and get relevant exam questions with AI-powered sample answers.',
       icon: Icons.psychology_outlined,
-      gradientColors: [Color(0xFFC09FF8), Color(0xFF9C27B0)],
-      imagePath: 'assets/images/topic_search.png',
       features: [
         OnboardingFeature(
           icon: Icons.search_sharp,
@@ -89,8 +81,6 @@ class OnboardingData {
       subtitle: 'Upload & Generate',
       description: 'Upload images of your study notes and get automatically generated questions to test your understanding.',
       icon: Icons.photo_camera_outlined,
-      gradientColors: [Color(0xFFFEC4DD), Color(0xFFE91E63)],
-      imagePath: 'assets/images/notes_upload.png',
       features: [
         OnboardingFeature(
           icon: Icons.upload_file,
@@ -114,8 +104,6 @@ class OnboardingData {
       subtitle: 'Study Together',
       description: 'Share questions with friends and study groups. Collaborate and help each other succeed in your academic journey.',
       icon: Icons.share_outlined,
-      gradientColors: [Color(0xFF00BCD4), Color(0xFF2196F3)],
-      imagePath: 'assets/images/share_collaborate.png',
       features: [
         OnboardingFeature(
           icon: Icons.share,
