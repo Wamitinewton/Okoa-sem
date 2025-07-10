@@ -64,6 +64,18 @@ class _SignupPageState extends State<SignupPage>
     AppRoute.login.go(context);
   }
 
+  void _navigateToOtpVerification(String email) {
+    AppRoute.otpVerification.go(
+      context,
+      queryParameters: {
+        'email': email,
+        'type': 'emailVerification',
+        'title': 'Verify Your Email',
+        'subtitle': 'We\'ve sent a 6-digit verification code to $email. Please enter it below to complete your registration.',
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,7 +106,7 @@ class _SignupPageState extends State<SignupPage>
                     ),
                   );
                 } else if (state.status == AuthStatus.authenticated) {
-                  AppRoute.home.go(context);
+                  _navigateToOtpVerification(_emailController.text.trim());
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
