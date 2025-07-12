@@ -23,7 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = User(
         id: '1',
         username: 'demo_user',
-        email: event.emailOrUsername.contains('@')
+        phoneNumber: event.emailOrUsername.contains('@')
             ? event.emailOrUsername
             : 'demo@example.com',
         createdAt: DateTime.now(),
@@ -52,7 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = User(
         id: '1',
         username: event.username,
-        email: event.email,
+        phoneNumber: event.email,
         createdAt: DateTime.now(),
       );
 

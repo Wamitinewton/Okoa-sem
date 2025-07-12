@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/core/config/app_colors.dart';
 import 'package:okoa_sem/core/config/app_theme.dart';
+import 'package:okoa_sem/core/config/supabase_config.dart';
 import 'package:okoa_sem/core/router/router.dart';
 import 'package:okoa_sem/di/injection_container.dart';
 import 'package:okoa_sem/features/authentication/presentation/bloc/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+    await SupabaseConfig.initialize();
 
   configureDependencies();
 

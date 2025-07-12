@@ -213,7 +213,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
         ),
       );
 
-      // Navigate to login after a short delay
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
           _navigateToLogin();
