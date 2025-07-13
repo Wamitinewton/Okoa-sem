@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:okoa_sem/core/config/app_colors.dart';
 import 'package:okoa_sem/core/config/app_theme.dart';
-import 'package:okoa_sem/core/config/supabase_config.dart';
 import 'package:okoa_sem/core/router/router.dart';
-import 'package:okoa_sem/di/injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await SupabaseConfig.initialize();
-
-  configureDependencies();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
