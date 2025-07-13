@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "687093712628",
+    "project_id": "okoa-sem-1c153",
+    "storage_bucket": "okoa-sem-1c153.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687093712628:android:cc77f308ef470493bb40a1",
+        "android_client_info": {
+          "package_name": "com.example.okoa_sem"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687093712628-b723j6dg9ff12slogsgc08tuolk4sdfi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.okoa_sem",
+            "certificate_hash": "1d8637f37621f5a09b26ff13cd69065194c7a34c"
+          }
+        },
+        {
+          "client_id": "687093712628-i58i3k0g2usp9h4fvgusoitans8llfjc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB0iJx4ZrkrDV2Q1dxbE9WmJf1IzvKoj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "687093712628-i58i3k0g2usp9h4fvgusoitans8llfjc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

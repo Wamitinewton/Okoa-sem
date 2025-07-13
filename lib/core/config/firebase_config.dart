@@ -40,10 +40,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDGpF1pabcdefghijklmnopqrstuvwxyz123',
-    appId: '1:123456789012:android:abcdef123456789012345',
+    apiKey: 'AIzaSyCB0iJx4ZrkrDV2Q1dxbE9WmJf1IzvKoj8',
+    appId: '1:687093712628:android:cc77f308ef470493bb40a1',
     messagingSenderId: '123456789012',
-    projectId: 'okoa-sem-project',
-    storageBucket: 'okoa-sem-project.appspot.com',
+    projectId: 'okoa-sem-1c153',
+    storageBucket: 'okoa-sem-1c153.firebasestorage.app',
   );
 }

@@ -5,9 +5,10 @@ import 'package:okoa_sem/di/injection_container.dart';
 import 'package:okoa_sem/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:okoa_sem/features/auth/presentation/bloc/auth_event.dart';
 import 'package:okoa_sem/features/auth/presentation/bloc/auth_state.dart';
-import 'package:okoa_sem/features/auth/presentation/pages/login_page.dart';
 import 'package:okoa_sem/features/home/home_screen.dart';
+import 'package:okoa_sem/features/onboarding/onboarding_page.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
+import 'package:okoa_sem/splash.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -19,20 +20,20 @@ class AuthWrapper extends StatelessWidget {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           return state.when(
-            initial: () => const _LoadingScreen(),
+            initial: () => const SplashScreen(),
             loading: () => const _LoadingScreen(),
             authenticated: (user) => const HomeScreen(),
-            unauthenticated: () => const LoginPage(),
+            unauthenticated: () => const OnboardingPage(),
             error: (failure, user) {
               if (user != null) {
                 return const HomeScreen();
               }
-              return const LoginPage();
+              return const OnboardingPage();
             },
-            passwordResetSent: () => const LoginPage(),
-            emailVerificationSent: () => const LoginPage(),
+            passwordResetSent: () => const OnboardingPage(),
+            emailVerificationSent: () => const OnboardingPage(),
             userReloaded: (user) => const HomeScreen(),
-            accountDeleted: () => const LoginPage(),
+            accountDeleted: () => const OnboardingPage(),
           );
         },
       ),
