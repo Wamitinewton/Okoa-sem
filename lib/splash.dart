@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
-import 'package:okoa_sem/core/router/route.dart'; 
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
-
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,8 +16,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _particleController;
-    late AnimationController _backgroundController;
-
+  late AnimationController _backgroundController;
 
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
@@ -28,7 +26,6 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<Offset> _titleSlide;
   late Animation<double> _subtitleOpacity;
   late Animation<Offset> _subtitleSlide;
-
 
   @override
   void initState() {
@@ -109,15 +106,12 @@ class _SplashScreenState extends State<SplashScreen>
         curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
       ),
     );
-
-  
   }
 
   void _startAnimationSequence() async {
     HapticFeedback.lightImpact();
 
     _backgroundController.forward();
-
     _particleController.repeat();
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -131,7 +125,9 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToNext() {
-    AppRoute.onboarding.go(context);
+    if (mounted) {
+      context.go('/app');
+    }
   }
 
   @override
@@ -156,7 +152,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-
 
   Widget _buildMainContent() {
     return Center(

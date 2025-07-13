@@ -15,15 +15,12 @@ final getIt = GetIt.instance;
   asExtension: true,
 )
 Future<void> configureDependencies() async {
-  // Initialize Firebase first
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // Register external dependencies
   _registerExternalDependencies();
   
-  // Initialize injectable dependencies
   getIt.init();
 }
 

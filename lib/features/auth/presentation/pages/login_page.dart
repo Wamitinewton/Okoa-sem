@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/core/failures/auth_failure.dart';
 import 'package:okoa_sem/di/injection_container.dart';
@@ -8,6 +9,7 @@ import 'package:okoa_sem/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:okoa_sem/features/auth/presentation/bloc/auth_event.dart';
 import 'package:okoa_sem/features/auth/presentation/bloc/auth_state.dart';
 import 'package:okoa_sem/features/auth/presentation/widgets/google_sign_in_button.dart';
+import 'package:okoa_sem/shared/widgets/custom_snackbars.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 
 class LoginPage extends StatefulWidget {
@@ -224,20 +226,17 @@ class _LoginPageState extends State<LoginPage>
       listener: (context, state) {
         state.maybeWhen(
           authenticated: (user) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Welcome back, ${user.displayName}!'),
-                backgroundColor: AppColors.success,
-              ),
+            CustomSnackBars.showSuccess(
+              context: context,
+              message: 'Welcome back, ${user.displayName}!',
             );
+            // Navigate to home
+            context.go('/home');
           },
           error: (failure, user) {
-            HapticFeedback.mediumImpact();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(failure.message),
-                backgroundColor: AppColors.error,
-              ),
+            CustomSnackBars.showError(
+              context: context,
+              message: failure.message,
             );
           },
           orElse: () {},

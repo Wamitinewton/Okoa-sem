@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/core/router/route.dart';
+import 'package:okoa_sem/core/storage/app_storage.dart';
 import 'package:okoa_sem/features/onboarding/models/onboarding_data.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_page_widget.dart';
 import 'package:okoa_sem/features/onboarding/widgets/onboarding_widgets.dart';
+import 'package:okoa_sem/shared/widgets/custom_snackbars.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -22,6 +25,7 @@ class _OnboardingPageState extends State<OnboardingPage>
   
   int _currentPage = 0;
   bool _isAnimating = false;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -64,10 +68,12 @@ class _OnboardingPageState extends State<OnboardingPage>
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       ).then((_) {
-        setState(() {
-          _currentPage = nextPageIndex;
-          _isAnimating = false;
-        });
+        if (mounted) {
+          setState(() {
+            _currentPage = nextPageIndex;
+            _isAnimating = false;
+          });
+        }
       });
     }
   }
@@ -84,17 +90,52 @@ class _OnboardingPageState extends State<OnboardingPage>
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOut,
       ).then((_) {
-        setState(() {
-          _currentPage = lastPageIndex;
-          _isAnimating = false;
-        });
+        if (mounted) {
+          setState(() {
+            _currentPage = lastPageIndex;
+            _isAnimating = false;
+          });
+        }
       });
     }
   }
 
-  void _getStarted() {
+  void _getStarted() async {
+    if (_isNavigating) return;
+    
+    setState(() {
+      _isNavigating = true;
+    });
+
     _triggerHapticFeedback();
-    AppRoute.login.go(context);
+
+    try {
+      // Mark onboarding as completed
+      await AppStorage.setOnboardingCompleted();
+      await AppStorage.setNotFirstTime();
+
+      if (mounted) {
+        // Navigate to login page
+        context.go(AppRoute.login.path);
+        
+        // Show welcome message
+        CustomSnackBars.showSuccess(
+          context: context,
+          message: 'Welcome to Okoa Sem! Please sign in to continue.',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isNavigating = false;
+        });
+        
+        CustomSnackBars.showError(
+          context: context,
+          message: 'Something went wrong. Please try again.',
+        );
+      }
+    }
   }
 
   @override
@@ -124,7 +165,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                       controller: _pageController,
                       itemCount: OnboardingData.pages.length,
                       onPageChanged: (index) {
-                        if (!_isAnimating) {
+                        if (!_isAnimating && mounted) {
                           setState(() {
                             _currentPage = index;
                           });
@@ -178,7 +219,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
               const Spacer(),
-              if (_currentPage < OnboardingData.pages.length - 1)
+              if (_currentPage < OnboardingData.pages.length - 1 && !_isNavigating)
                 TextButton(
                   onPressed: _skipToEnd,
                   style: TextButton.styleFrom(
@@ -219,10 +260,14 @@ class _OnboardingPageState extends State<OnboardingPage>
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: isLastPage ? _getStarted : _nextPage,
+          onPressed: (_isAnimating || _isNavigating) 
+              ? null 
+              : (isLastPage ? _getStarted : _nextPage),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.onPrimary,
+            disabledBackgroundColor: AppColors.disabled,
+            disabledForegroundColor: AppColors.onPrimary.withValues(alpha: 0.6),
             padding: EdgeInsets.symmetric(
               vertical: context.sizing.m,
             ),
@@ -232,24 +277,48 @@ class _OnboardingPageState extends State<OnboardingPage>
             elevation: 4,
             shadowColor: AppColors.primary.withValues(alpha: 0.3),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isLastPage ? 'Get Started' : 'Next',
-                style: context.typography.labelL.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.onPrimary,
+          child: _isNavigating
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: context.sizing.iconS,
+                      height: context.sizing.iconS,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: context.sizing.s),
+                    Text(
+                      'Setting up...',
+                      style: context.typography.labelL.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isLastPage ? 'Get Started' : 'Next',
+                      style: context.typography.labelL.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                    SizedBox(width: context.sizing.s),
+                    Icon(
+                      isLastPage ? Icons.rocket_launch : Icons.arrow_forward,
+                      size: context.sizing.iconS,
+                      color: AppColors.onPrimary,
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(width: context.sizing.s),
-              Icon(
-                isLastPage ? Icons.rocket_launch : Icons.arrow_forward,
-                size: context.sizing.iconS,
-                color: AppColors.onPrimary,
-              ),
-            ],
-          ),
         ),
       ),
     );
