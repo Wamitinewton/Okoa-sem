@@ -298,15 +298,28 @@ class _LoginPageState extends State<LoginPage>
   Widget _buildFooterSection() {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildFeatureChip(Icons.school, 'Past Papers'),
-            SizedBox(width: context.sizing.s),
-            _buildFeatureChip(Icons.quiz, 'Smart Search'),
-            SizedBox(width: context.sizing.s),
-            _buildFeatureChip(Icons.group, 'Study Groups'),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth;
+            final chipWidth = (availableWidth - (context.sizing.s * 2)) / 3;
+            
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: _buildFeatureChip(Icons.school, 'Past Papers', chipWidth),
+                ),
+                SizedBox(width: context.sizing.xs),
+                Flexible(
+                  child: _buildFeatureChip(Icons.quiz, 'Smart Search', chipWidth),
+                ),
+                SizedBox(width: context.sizing.xs),
+                Flexible(
+                  child: _buildFeatureChip(Icons.group, 'Study Groups', chipWidth),
+                ),
+              ],
+            );
+          },
         ),
         
         SizedBox(height: context.sizing.l),
@@ -322,10 +335,11 @@ class _LoginPageState extends State<LoginPage>
     );
   }
 
-  Widget _buildFeatureChip(IconData icon, String label) {
+  Widget _buildFeatureChip(IconData icon, String label, double maxWidth) {
     return Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
       padding: EdgeInsets.symmetric(
-        horizontal: context.sizing.s,
+        horizontal: context.sizing.xs,
         vertical: context.sizing.xs,
       ),
       decoration: BoxDecoration(
@@ -338,18 +352,24 @@ class _LoginPageState extends State<LoginPage>
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
             size: context.sizing.iconS,
             color: AppColors.primary,
           ),
-          SizedBox(width: context.sizing.xs),
-          Text(
-            label,
-            style: context.typography.labelS.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
+          SizedBox(width: context.sizing.xs / 2),
+          Flexible(
+            child: Text(
+              label,
+              style: context.typography.labelS.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+                fontSize: context.sizing.size(10),
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
           ),
         ],
