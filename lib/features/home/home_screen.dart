@@ -274,7 +274,6 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         SizedBox(height: context.sizing.l),
-        // Fixed: Use LayoutBuilder to get available width and calculate proper spacing
         LayoutBuilder(
           builder: (context, constraints) {
             final availableWidth = constraints.maxWidth;
@@ -351,7 +350,6 @@ class _HomeScreenState extends State<HomeScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        // Fixed: Use flexible height with constraints
         constraints: BoxConstraints(
           minHeight: context.sizing.size(120),
           maxHeight: context.sizing.size(140),
@@ -374,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Fixed: Use min to prevent overflow
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: EdgeInsets.all(context.sizing.s),
@@ -388,8 +386,8 @@ class _HomeScreenState extends State<HomeScreen>
                 size: context.sizing.iconM,
               ),
             ),
-            SizedBox(height: context.sizing.s), // Fixed: Reduced spacing
-            Flexible( // Fixed: Make text flexible to prevent overflow
+            SizedBox(height: context.sizing.s),
+            Flexible( 
               child: Text(
                 title,
                 style: context.typography.titleS.copyWith(
@@ -400,8 +398,8 @@ class _HomeScreenState extends State<HomeScreen>
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(height: context.sizing.xs / 2), // Fixed: Reduced spacing
-            Flexible( // Fixed: Make text flexible to prevent overflow
+            SizedBox(height: context.sizing.xs / 2), 
+            Flexible( 
               child: Text(
                 subtitle,
                 style: context.typography.bodyS.copyWith(
