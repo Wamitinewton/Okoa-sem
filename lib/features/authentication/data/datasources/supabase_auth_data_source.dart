@@ -278,7 +278,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
         });
       }
     } catch (e) {
-      Println('Failed to update user metadata: $e');
+      print('Failed to update user metadata: $e');
     }
   }
 }

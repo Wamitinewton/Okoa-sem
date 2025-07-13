@@ -10,15 +10,13 @@ void configureDependencies() {
 }
 
 void _configureSupabase() {
-  getIt.registerLazySingleton<SupabaseClient>(
-    () => Supabase.instance.client,
-  );
-  
-  authGetIt.registerLazySingleton<SupabaseClient>(
-    () => Supabase.instance.client,
-  );
+  if (!getIt.isRegistered<SupabaseClient>()) {
+    getIt.registerLazySingleton<SupabaseClient>(
+      () => Supabase.instance.client,
+    );
+  }
 }
 
 void _configureAuthFeature() {
-  configureAuthDependencies();
+  configureAuthDependencies(getIt.get<SupabaseClient>());
 }

@@ -18,54 +18,82 @@ import 'package:okoa_sem/features/authentication/presentation/bloc/auth_bloc.dar
 
 final GetIt authGetIt = GetIt.instance;
 
-void configureAuthDependencies() {
-  authGetIt.registerLazySingleton<AuthDataSource>(
-    () => SupabaseAuthDataSource(authGetIt<SupabaseClient>()),
-  );
+void configureAuthDependencies(SupabaseClient supabaseClient) {
+  if (!authGetIt.isRegistered<SupabaseClient>()) {
+    authGetIt.registerSingleton<SupabaseClient>(supabaseClient);
+  }
 
-  authGetIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(authGetIt<AuthDataSource>()),
-  );
+  if (!authGetIt.isRegistered<AuthDataSource>()) {
+    authGetIt.registerLazySingleton<AuthDataSource>(
+      () => SupabaseAuthDataSource(authGetIt<SupabaseClient>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<SignUpUseCase>(
-    () => SignUpUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<AuthRepository>()) {
+    authGetIt.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(authGetIt<AuthDataSource>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<VerifyPhoneUseCase>(
-    () => VerifyPhoneUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<SignUpUseCase>()) {
+    authGetIt.registerLazySingleton<SignUpUseCase>(
+      () => SignUpUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<SignInWithPhoneUseCase>(
-    () => SignInWithPhoneUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<VerifyPhoneUseCase>()) {
+    authGetIt.registerLazySingleton<VerifyPhoneUseCase>(
+      () => VerifyPhoneUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<SignInWithPasswordUseCase>(
-    () => SignInWithPasswordUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<SignInWithPhoneUseCase>()) {
+    authGetIt.registerLazySingleton<SignInWithPhoneUseCase>(
+      () => SignInWithPhoneUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<ResendOtpUseCase>(
-    () => ResendOtpUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<SignInWithPasswordUseCase>()) {
+    authGetIt.registerLazySingleton<SignInWithPasswordUseCase>(
+      () => SignInWithPasswordUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<SignOutUseCase>(
-    () => SignOutUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<ResendOtpUseCase>()) {
+    authGetIt.registerLazySingleton<ResendOtpUseCase>(
+      () => ResendOtpUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<GetCurrentSessionUseCase>(
-    () => GetCurrentSessionUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<SignOutUseCase>()) {
+    authGetIt.registerLazySingleton<SignOutUseCase>(
+      () => SignOutUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<RefreshSessionUseCase>(
-    () => RefreshSessionUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<GetCurrentSessionUseCase>()) {
+    authGetIt.registerLazySingleton<GetCurrentSessionUseCase>(
+      () => GetCurrentSessionUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<UpdateProfileUseCase>(
-    () => UpdateProfileUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<RefreshSessionUseCase>()) {
+    authGetIt.registerLazySingleton<RefreshSessionUseCase>(
+      () => RefreshSessionUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
-  authGetIt.registerLazySingleton<CheckUsernameAvailabilityUseCase>(
-    () => CheckUsernameAvailabilityUseCase(authGetIt<AuthRepository>()),
-  );
+  if (!authGetIt.isRegistered<UpdateProfileUseCase>()) {
+    authGetIt.registerLazySingleton<UpdateProfileUseCase>(
+      () => UpdateProfileUseCase(authGetIt<AuthRepository>()),
+    );
+  }
+
+  if (!authGetIt.isRegistered<CheckUsernameAvailabilityUseCase>()) {
+    authGetIt.registerLazySingleton<CheckUsernameAvailabilityUseCase>(
+      () => CheckUsernameAvailabilityUseCase(authGetIt<AuthRepository>()),
+    );
+  }
 
   authGetIt.registerFactory<AuthBloc>(
     () => AuthBloc(
