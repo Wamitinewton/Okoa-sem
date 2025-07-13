@@ -40,14 +40,23 @@ class ValidationUtils {
       return 'Phone number is required';
     }
 
-    if (!phoneNumber.isValidNumber()) {
+    final number = phoneNumber.number.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (number.length < 9 || number.length > 10) {
       return 'Please enter a valid phone number';
+    }
+    
+    final firstDigit = number.substring(0, 1);
+    if (number.length == 9 && firstDigit != '7' && firstDigit != '1') {
+      return 'Please enter a valid mobile number';
+    }
+    
+    if (number.length == 10 && !number.startsWith('07') && !number.startsWith('01')) {
+      return 'Please enter a valid mobile number';
     }
 
     return null;
   }
-
-
 
   static String? validateEmailOrUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -149,12 +158,8 @@ class ValidationUtils {
     
     final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
     
-    if (digitsOnly.length < 10) {
-      return 'Phone number must be at least 10 digits';
-    }
-    
-    if (digitsOnly.length > 15) {
-      return 'Phone number must be less than 15 digits';
+    if (digitsOnly.length < 9 || digitsOnly.length > 10) {
+      return 'Phone number must be 9-10 digits';
     }
     
     return null;

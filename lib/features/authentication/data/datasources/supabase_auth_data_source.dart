@@ -236,25 +236,25 @@ class SupabaseAuthDataSource implements AuthDataSource {
 
   String _formatPhoneNumberForSupabase(String phoneNumber) {
     String cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
-
+    
     if (cleanNumber.startsWith('+254')) {
       return cleanNumber;
     }
-
-    cleanNumber = cleanNumber.replaceAll(RegExp(r'^\+'), '');
-
+    
+    cleanNumber = cleanNumber.replaceAll('+', '');
+    
     if (cleanNumber.startsWith('254')) {
       return '+$cleanNumber';
     }
-
+    
     if (cleanNumber.startsWith('0')) {
       return '+254${cleanNumber.substring(1)}';
     }
-
+    
     if (cleanNumber.length == 9) {
       return '+254$cleanNumber';
     }
-
+    
     return '+254$cleanNumber';
   }
 

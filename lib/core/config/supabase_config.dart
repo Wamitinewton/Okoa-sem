@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
-  static final String supabaseUrl = 'supabase-url';
+  static final String supabaseUrl = 'https:your-url';
   static final String supabaseAnonKey = 'anon-key';
 
   static Future<void> initialize() async {
