@@ -269,21 +269,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
 
-    final digits = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-    
-    if (digits.length < 9 || digits.length > 13) {
-      return const AuthFailure(
-        message: 'Invalid phone number format',
-        type: AuthFailureType.invalidPhoneNumber,
-      );
-    }
 
-    if (!_isValidKenyanNumber(digits)) {
-      return const AuthFailure(
-        message: 'Please enter a valid Kenyan phone number',
-        type: AuthFailureType.invalidPhoneNumber,
-      );
-    }
 
     return null;
   }
@@ -363,21 +349,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return null;
   }
 
-  bool _isValidKenyanNumber(String digits) {
-    String localNumber = digits;
-    if (digits.startsWith('254')) {
-      localNumber = digits.substring(3);
-    }
-    
-    if (localNumber.startsWith('0')) {
-      localNumber = localNumber.substring(1);
-    }
 
-    if (localNumber.length != 9) return false;
-
-    final validPrefixes = ['7', '1']; // 7xx and 1xx series
-    return validPrefixes.any((prefix) => localNumber.startsWith(prefix));
-  }
 
   AuthFailure _mapAuthException(AuthException exception) {
     final message = exception.message.toLowerCase();

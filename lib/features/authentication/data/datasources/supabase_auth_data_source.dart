@@ -1,4 +1,3 @@
-import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:okoa_sem/features/authentication/data/datasources/auth_data_source.dart';
 import 'package:okoa_sem/features/authentication/data/models/auth_response_model.dart';
@@ -11,7 +10,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
 
   SupabaseAuthDataSource(this._supabase);
 
- @override
+  @override
   Future<void> signUpWithPhone({
     required String phoneNumber,
     required String username,
@@ -23,14 +22,12 @@ class SupabaseAuthDataSource implements AuthDataSource {
         throw const AuthException('Username is already taken');
       }
 
-      final formattedPhone = _formatPhoneNumber(phoneNumber);
+      final formattedPhone = _formatPhoneNumberForSupabase(phoneNumber);
 
       await _supabase.auth.signUp(
         phone: formattedPhone,
         password: password,
-        data: {
-          'username': username,
-        },
+        data: {'username': username},
       );
     } on AuthException {
       rethrow;
@@ -45,7 +42,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
     required String otp,
   }) async {
     try {
-      final formattedPhone = _formatPhoneNumber(phoneNumber);
+      final formattedPhone = _formatPhoneNumberForSupabase(phoneNumber);
 
       final response = await _supabase.auth.verifyOTP(
         phone: formattedPhone,
@@ -71,15 +68,11 @@ class SupabaseAuthDataSource implements AuthDataSource {
   }
 
   @override
-  Future<void> signInWithPhoneOtp({
-    required String phoneNumber,
-  }) async {
+  Future<void> signInWithPhoneOtp({required String phoneNumber}) async {
     try {
-      final formattedPhone = _formatPhoneNumber(phoneNumber);
+      final formattedPhone = _formatPhoneNumberForSupabase(phoneNumber);
 
-      await _supabase.auth.signInWithOtp(
-        phone: formattedPhone,
-      );
+      await _supabase.auth.signInWithOtp(phone: formattedPhone);
     } on AuthException {
       rethrow;
     } catch (e) {
@@ -116,16 +109,11 @@ class SupabaseAuthDataSource implements AuthDataSource {
   }
 
   @override
-  Future<void> resendOtp({
-    required String phoneNumber,
-  }) async {
+  Future<void> resendOtp({required String phoneNumber}) async {
     try {
-      final formattedPhone = _formatPhoneNumber(phoneNumber);
+      final formattedPhone = _formatPhoneNumberForSupabase(phoneNumber);
 
-      await _supabase.auth.resend(
-        phone: formattedPhone,
-        type: OtpType.sms,
-      );
+      await _supabase.auth.resend(phone: formattedPhone, type: OtpType.sms);
     } on AuthException {
       rethrow;
     } catch (e) {
@@ -184,7 +172,8 @@ class SupabaseAuthDataSource implements AuthDataSource {
         throw const AuthException('No authenticated user');
       }
 
-      if (username != null && username != currentUser.userMetadata?['username']) {
+      if (username != null &&
+          username != currentUser.userMetadata?['username']) {
         final isAvailable = await isUsernameAvailable(username);
         if (!isAvailable) {
           throw const AuthException('Username is already taken');
@@ -245,18 +234,28 @@ class SupabaseAuthDataSource implements AuthDataSource {
     }
   }
 
-  String _formatPhoneNumber(String phoneNumber) {
-    String digits = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-    
-    if (digits.startsWith('0')) {
-      return '+254${digits.substring(1)}';
-    } else if (digits.startsWith('254')) {
-      return '+$digits';
-    } else if (digits.startsWith('+254')) {
-      return digits;
-    } else {
-      return '+254$digits';
+  String _formatPhoneNumberForSupabase(String phoneNumber) {
+    String cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+    if (cleanNumber.startsWith('+254')) {
+      return cleanNumber;
     }
+
+    cleanNumber = cleanNumber.replaceAll(RegExp(r'^\+'), '');
+
+    if (cleanNumber.startsWith('254')) {
+      return '+$cleanNumber';
+    }
+
+    if (cleanNumber.startsWith('0')) {
+      return '+254${cleanNumber.substring(1)}';
+    }
+
+    if (cleanNumber.length == 9) {
+      return '+254$cleanNumber';
+    }
+
+    return '+254$cleanNumber';
   }
 
   Future<void> _updateUserMetadata(String userId) async {
@@ -266,7 +265,7 @@ class SupabaseAuthDataSource implements AuthDataSource {
 
       final metadata = currentUser.userMetadata ?? {};
       final username = metadata['username'] as String?;
-      
+
       if (username != null) {
         await _supabase.from('users').upsert({
           'id': userId,

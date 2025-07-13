@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
-import 'package:okoa_sem/core/utils/validation_utils.dart'; 
+import 'package:okoa_sem/core/utils/validation_utils.dart';
 import '../widgets/custom_input_field.dart';
-import '../widgets/kenyan_phone_field.dart';
+import '../widgets/international_phone_field.dart';
 import '../widgets/auth_widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage>
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   late AnimationController _backgroundController;
   bool _isPhoneLogin = false;
   String _phoneNumber = '';
@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _backgroundController.forward();
     });
@@ -56,9 +56,7 @@ class _LoginPageState extends State<LoginPage>
       if (_isPhoneLogin) {
         // Login with phone OTP
         context.read<AuthBloc>().add(
-          SignInWithPhoneRequested(
-            phoneNumber: _phoneNumber,
-          ),
+          SignInWithPhoneRequested(phoneNumber: _phoneNumber),
         );
       } else {
         // Login with username/password
@@ -76,7 +74,7 @@ class _LoginPageState extends State<LoginPage>
     setState(() {
       _isPhoneLogin = !_isPhoneLogin;
     });
-    
+
     // Clear form fields when switching
     _usernameController.clear();
     _passwordController.clear();
@@ -95,8 +93,9 @@ class _LoginPageState extends State<LoginPage>
         'phone': phoneNumber,
         'type': 'phoneVerification',
         'title': 'Sign In Verification',
-        'subtitle': 'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to sign in.',
-      }
+        'subtitle':
+            'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to sign in.',
+      },
     );
   }
 
@@ -106,7 +105,7 @@ class _LoginPageState extends State<LoginPage>
       body: Stack(
         children: [
           UniversalBackground(animation: _backgroundController),
-          
+
           SafeArea(
             child: BlocListener<AuthBloc, AuthState>(
               listener: (context, state) {
@@ -122,7 +121,9 @@ class _LoginPageState extends State<LoginPage>
                       backgroundColor: AppColors.error,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(context.sizing.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          context.sizing.radiusM,
+                        ),
                       ),
                       margin: EdgeInsets.all(context.sizing.m),
                     ),
@@ -140,7 +141,9 @@ class _LoginPageState extends State<LoginPage>
                       backgroundColor: AppColors.success,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(context.sizing.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          context.sizing.radiusM,
+                        ),
                       ),
                       margin: EdgeInsets.all(context.sizing.m),
                     ),
@@ -158,7 +161,9 @@ class _LoginPageState extends State<LoginPage>
                       backgroundColor: AppColors.success,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(context.sizing.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          context.sizing.radiusM,
+                        ),
                       ),
                       margin: EdgeInsets.all(context.sizing.m),
                     ),
@@ -171,32 +176,33 @@ class _LoginPageState extends State<LoginPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: context.sizing.l),
-                    
+
                     // Header
                     const AuthHeader(
                       title: 'Welcome Back!',
-                      subtitle: 'Sign in to continue your academic journey with Okoa Sem',
+                      subtitle:
+                          'Sign in to continue your academic journey with Okoa Sem',
                     ),
-                    
+
                     SizedBox(height: context.sizing.xl),
-                    
-                    // Login method toggle
+
                     _buildLoginMethodToggle(),
-                    
+
                     SizedBox(height: context.sizing.l),
-                    
+
                     AuthFormContainer(
                       child: Form(
                         key: _formKey,
                         child: Column(
                           children: [
                             if (_isPhoneLogin) ...[
-                              KenyanPhoneField(
+                              InternationalPhoneField(
                                 label: 'Phone Number',
                                 hintText: '712 345 678',
                                 controller: _phoneController,
                                 isRequired: true,
-                                validator: ValidationUtils.validateKenyanPhoneNumber,
+                                validator: ValidationUtils
+                                    .validateInternationalPhoneNumber,
                                 onChanged: (phoneNumber) {
                                   setState(() {
                                     _phoneNumber = phoneNumber;
@@ -218,9 +224,9 @@ class _LoginPageState extends State<LoginPage>
                                   size: context.sizing.iconM,
                                 ),
                               ),
-                              
+
                               SizedBox(height: context.sizing.l),
-                              
+
                               CustomInputField(
                                 label: 'Password',
                                 hintText: 'Enter your password',
@@ -235,28 +241,12 @@ class _LoginPageState extends State<LoginPage>
                                   size: context.sizing.iconM,
                                 ),
                               ),
-                              
+
                               SizedBox(height: context.sizing.s),
-                              
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    // TODO: Implement forgot password
-                                  },
-                                  child: Text(
-                                    'Forgot Password?',
-                                    style: context.typography.bodyS.copyWith(
-                                      color: context.colors.primary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
-                            
+
                             SizedBox(height: context.sizing.xl),
-                            
+
                             BlocBuilder<AuthBloc, AuthState>(
                               builder: (context, state) {
                                 return AuthButton(
@@ -270,13 +260,13 @@ class _LoginPageState extends State<LoginPage>
                         ),
                       ),
                     ),
-                    
+
                     SizedBox(height: context.sizing.xl),
-                    
+
                     const AuthDivider(),
-                    
+
                     SizedBox(height: context.sizing.xl),
-                    
+
                     Center(
                       child: AuthFooter(
                         questionText: "Don't have an account?",
@@ -284,7 +274,7 @@ class _LoginPageState extends State<LoginPage>
                         onActionPressed: _navigateToSignup,
                       ),
                     ),
-                    
+
                     SizedBox(height: context.sizing.l),
                   ],
                 ),
@@ -301,10 +291,7 @@ class _LoginPageState extends State<LoginPage>
       decoration: BoxDecoration(
         color: context.colors.surfaceVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(context.sizing.radiusL),
-        border: Border.all(
-          color: context.colors.border,
-          width: 1,
-        ),
+        border: Border.all(color: context.colors.border, width: 1),
       ),
       child: Row(
         children: [
@@ -314,12 +301,10 @@ class _LoginPageState extends State<LoginPage>
                 if (_isPhoneLogin) _toggleLoginMethod();
               },
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: context.sizing.s,
-                ),
+                padding: EdgeInsets.symmetric(vertical: context.sizing.s),
                 decoration: BoxDecoration(
-                  color: !_isPhoneLogin 
-                      ? context.colors.primary 
+                  color: !_isPhoneLogin
+                      ? context.colors.primary
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(context.sizing.radiusL),
                 ),
@@ -329,19 +314,19 @@ class _LoginPageState extends State<LoginPage>
                     Icon(
                       Icons.person_outline,
                       size: context.sizing.iconS,
-                      color: !_isPhoneLogin 
-                          ? context.colors.onPrimary 
+                      color: !_isPhoneLogin
+                          ? context.colors.onPrimary
                           : context.colors.surfaceAlpha(0.7),
                     ),
                     SizedBox(width: context.sizing.xs),
                     Text(
                       'Username',
                       style: context.typography.labelM.copyWith(
-                        color: !_isPhoneLogin 
-                            ? context.colors.onPrimary 
+                        color: !_isPhoneLogin
+                            ? context.colors.onPrimary
                             : context.colors.surfaceAlpha(0.7),
-                        fontWeight: !_isPhoneLogin 
-                            ? FontWeight.w600 
+                        fontWeight: !_isPhoneLogin
+                            ? FontWeight.w600
                             : FontWeight.normal,
                       ),
                     ),
@@ -356,12 +341,10 @@ class _LoginPageState extends State<LoginPage>
                 if (!_isPhoneLogin) _toggleLoginMethod();
               },
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: context.sizing.s,
-                ),
+                padding: EdgeInsets.symmetric(vertical: context.sizing.s),
                 decoration: BoxDecoration(
-                  color: _isPhoneLogin 
-                      ? context.colors.primary 
+                  color: _isPhoneLogin
+                      ? context.colors.primary
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(context.sizing.radiusL),
                 ),
@@ -371,19 +354,19 @@ class _LoginPageState extends State<LoginPage>
                     Icon(
                       Icons.phone_outlined,
                       size: context.sizing.iconS,
-                      color: _isPhoneLogin 
-                          ? context.colors.onPrimary 
+                      color: _isPhoneLogin
+                          ? context.colors.onPrimary
                           : context.colors.surfaceAlpha(0.7),
                     ),
                     SizedBox(width: context.sizing.xs),
                     Text(
                       'Phone',
                       style: context.typography.labelM.copyWith(
-                        color: _isPhoneLogin 
-                            ? context.colors.onPrimary 
+                        color: _isPhoneLogin
+                            ? context.colors.onPrimary
                             : context.colors.surfaceAlpha(0.7),
-                        fontWeight: _isPhoneLogin 
-                            ? FontWeight.w600 
+                        fontWeight: _isPhoneLogin
+                            ? FontWeight.w600
                             : FontWeight.normal,
                       ),
                     ),

@@ -5,7 +5,7 @@ import 'package:okoa_sem/core/utils/validation_utils.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
 import '../widgets/custom_input_field.dart';
-import '../widgets/kenyan_phone_field.dart';
+import '../widgets/international_phone_field.dart';
 import '../widgets/auth_widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -73,8 +73,9 @@ class _SignupPageState extends State<SignupPage>
         'phone': phoneNumber,
         'type': 'phoneVerification',
         'title': 'Verify Your Phone',
-        'subtitle': 'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to complete your registration.',
-      }
+        'subtitle':
+            'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to complete your registration.',
+      },
     );
   }
 
@@ -167,12 +168,13 @@ class _SignupPageState extends State<SignupPage>
 
                             SizedBox(height: context.sizing.l),
 
-                            KenyanPhoneField(
+                            InternationalPhoneField(
                               label: 'Phone Number',
                               hintText: '712 345 678',
                               controller: _phoneController,
                               isRequired: true,
-                              validator: ValidationUtils.validateKenyanPhoneNumber,
+                              validator: ValidationUtils
+                                  .validateInternationalPhoneNumber,
                               onChanged: (phoneNumber) {
                                 setState(() {
                                   _phoneNumber = phoneNumber;

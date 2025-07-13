@@ -52,25 +52,20 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _contentController,
         curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
       ),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _contentController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _contentController,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+          ),
+        );
   }
 
   void _startAnimations() {
@@ -89,21 +84,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     if (state.canVerifyOtp) {
       HapticFeedback.lightImpact();
       context.read<AuthBloc>().add(
-        VerifyPhoneOtpRequested(
-          phoneNumber: widget.phone,
-          otp: state.otpCode,
-        ),
+        VerifyPhoneOtpRequested(phoneNumber: widget.phone, otp: state.otpCode),
       );
     }
   }
 
   void _handleResendOtp() {
     HapticFeedback.mediumImpact();
-    context.read<AuthBloc>().add(
-      ResendOtpRequested(
-        phoneNumber: widget.phone,
-      ),
-    );
+    context.read<AuthBloc>().add(ResendOtpRequested(phoneNumber: widget.phone));
   }
 
   void _handleVerifyPressed() {
@@ -122,16 +110,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   String get _displaySubtitle {
-    return widget.subtitle ?? 
-           'We\'ve sent a 6-digit verification code to ${_maskPhoneNumber(widget.phone)}';
+    return widget.subtitle ??
+        'We\'ve sent a 6-digit verification code to ${_maskPhoneNumber(widget.phone)}';
   }
 
   String _maskPhoneNumber(String phone) {
     if (phone.length < 4) return phone;
-    
+
     final visiblePart = phone.substring(phone.length - 3);
     final maskedPart = '*' * (phone.length - 3);
-    
+
     return '$maskedPart$visiblePart';
   }
 
@@ -148,7 +136,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
       body: Stack(
         children: [
           UniversalBackground(animation: _backgroundController),
-          
+
           SafeArea(
             child: BlocListener<AuthBloc, AuthState>(
               listener: _handleBlocStateChanges,
@@ -174,7 +162,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   void _handleBlocStateChanges(BuildContext context, AuthState state) {
     if (state.status == AuthStatus.authenticated) {
       HapticFeedback.heavyImpact();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -199,7 +187,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
       });
     } else if (state.status == AuthStatus.error && state.errorMessage != null) {
       HapticFeedback.mediumImpact();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -226,25 +214,25 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(height: context.sizing.l),
-          
+
           _buildHeader(),
-          
+
           SizedBox(height: context.sizing.xxl),
-          
+
           _buildOtpSection(),
-          
+
           SizedBox(height: context.sizing.xl),
-          
+
           _buildTimerSection(),
-          
+
           SizedBox(height: context.sizing.l),
-          
+
           _buildResendSection(),
-          
+
           SizedBox(height: context.sizing.xl),
-          
+
           _buildActionButtons(),
-          
+
           SizedBox(height: context.sizing.l),
         ],
       ),
@@ -278,9 +266,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
             color: AppColors.onPrimary,
           ),
         ),
-        
+
         SizedBox(height: context.sizing.xl),
-        
+
         Text(
           _displayTitle,
           style: context.typography.headlineL.copyWith(
@@ -289,9 +277,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
           ),
           textAlign: TextAlign.center,
         ),
-        
+
         SizedBox(height: context.sizing.s),
-        
+
         Text(
           _displaySubtitle,
           style: context.typography.bodyL.copyWith(
@@ -312,10 +300,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
           decoration: BoxDecoration(
             color: context.colors.surfaceVariant.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(context.sizing.radiusL),
-            border: Border.all(
-              color: context.colors.border,
-              width: 1,
-            ),
+            border: Border.all(color: context.colors.border, width: 1),
           ),
           child: Column(
             children: [
@@ -326,9 +311,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              
+
               SizedBox(height: context.sizing.l),
-              
+
               OtpInputField(
                 value: state.otpCode,
                 onChanged: _handleOtpChanged,
@@ -336,7 +321,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                 hasError: state.status == AuthStatus.error,
                 enabled: !state.isLoading && state.attemptsLeft > 0,
               ),
-              
+
               if (state.attemptsLeft < 3 && state.attemptsLeft > 0) ...[
                 SizedBox(height: context.sizing.s),
                 Text(
@@ -357,7 +342,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (!state.isTimerActive) return const SizedBox.shrink();
-        
+
         return Container(
           padding: EdgeInsets.symmetric(
             horizontal: context.sizing.l,
@@ -405,9 +390,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                 color: context.colors.surfaceAlpha(0.7),
               ),
             ),
-            
+
             SizedBox(height: context.sizing.s),
-            
+
             TextButton(
               onPressed: state.canRequestResend ? _handleResendOtp : null,
               style: TextButton.styleFrom(
@@ -456,9 +441,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: context.colors.onPrimary,
-                  padding: EdgeInsets.symmetric(
-                    vertical: context.sizing.m,
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: context.sizing.m),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(context.sizing.radiusL),
                   ),
@@ -485,9 +468,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                       ),
               ),
             ),
-            
+
             SizedBox(height: context.sizing.m),
-            
+
             TextButton(
               onPressed: _navigateToLogin,
               style: TextButton.styleFrom(
