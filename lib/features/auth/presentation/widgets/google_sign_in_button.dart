@@ -77,8 +77,11 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton>
           height: context.sizing.buttonL,
           decoration: BoxDecoration(
             gradient: widget.onPressed != null
-                ? const LinearGradient(
-                    colors: AppColors.primaryGradient,
+                ? LinearGradient(
+                    colors: [
+                      const Color(0xFF2C2C2C), // Dark gray
+                      const Color(0xFF1A1A1A), // Darker gray
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
@@ -89,19 +92,25 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton>
                     ],
                   ),
             borderRadius: BorderRadius.circular(context.sizing.radiusL),
+            border: Border.all(
+              color: widget.onPressed != null
+                  ? const Color(0xFF404040) // Subtle border
+                  : AppColors.disabled,
+              width: 1,
+            ),
             boxShadow: widget.onPressed != null
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: context.sizing.size(8),
+                      spreadRadius: context.sizing.size(1),
+                      offset: Offset(0, context.sizing.size(2)),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: context.sizing.size(12),
                       spreadRadius: context.sizing.size(2),
                       offset: Offset(0, context.sizing.size(4)),
-                    ),
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      blurRadius: context.sizing.size(20),
-                      spreadRadius: context.sizing.size(4),
-                      offset: Offset(0, context.sizing.size(8)),
                     ),
                   ]
                 : [
@@ -126,19 +135,11 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton>
       children: [
         _buildGoogleIcon(),
         SizedBox(width: context.sizing.m),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [
-              Colors.white,
-              Colors.white,
-            ],
-          ).createShader(bounds),
-          child: Text(
-            'Continue with Google',
-            style: context.typography.labelL.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+        Text(
+          'Continue with Google',
+          style: context.typography.labelL.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -199,7 +200,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton>
             return Icon(
               Icons.login,
               size: context.sizing.iconS,
-              color: AppColors.primary,
+              color: const Color(0xFF4285F4), // Google blue
             );
           },
         ),

@@ -274,51 +274,68 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         SizedBox(height: context.sizing.l),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: context.sizing.m,
-          mainAxisSpacing: context.sizing.m,
-          childAspectRatio: 1.2,
-          children: [
-            _buildActionCard(
-              icon: Icons.library_books,
-              title: 'Past Papers',
-              subtitle: 'Browse by school',
-              color: AppColors.primary,
-              onTap: () {
-                HapticFeedback.lightImpact();
-              },
-            ),
-            _buildActionCard(
-              icon: Icons.psychology,
-              title: 'Topic Search',
-              subtitle: 'AI-powered search',
-              color: AppColors.secondary,
-              onTap: () {
-                HapticFeedback.lightImpact();
-              },
-            ),
-            _buildActionCard(
-              icon: Icons.camera_alt,
-              title: 'Notes to Questions',
-              subtitle: 'Upload & generate',
-              color: AppColors.tertiary,
-              onTap: () {
-                HapticFeedback.lightImpact();
-              },
-            ),
-            _buildActionCard(
-              icon: Icons.share,
-              title: 'Share & Collaborate',
-              subtitle: 'Study together',
-              color: AppColors.info,
-              onTap: () {
-                HapticFeedback.lightImpact();
-              },
-            ),
-          ],
+        // Fixed: Use LayoutBuilder to get available width and calculate proper spacing
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth;
+            final spacing = context.sizing.m;
+            final cardWidth = (availableWidth - spacing) / 2;
+            
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                SizedBox(
+                  width: cardWidth,
+                  child: _buildActionCard(
+                    icon: Icons.library_books,
+                    title: 'Past Papers',
+                    subtitle: 'Browse by school',
+                    color: AppColors.primary,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _buildActionCard(
+                    icon: Icons.psychology,
+                    title: 'Topic Search',
+                    subtitle: 'AI-powered search',
+                    color: AppColors.secondary,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _buildActionCard(
+                    icon: Icons.camera_alt,
+                    title: 'Notes to Questions',
+                    subtitle: 'Upload & generate',
+                    color: AppColors.tertiary,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _buildActionCard(
+                    icon: Icons.share,
+                    title: 'Share & Collaborate',
+                    subtitle: 'Study together',
+                    color: AppColors.info,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -334,7 +351,12 @@ class _HomeScreenState extends State<HomeScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(context.sizing.l),
+        // Fixed: Use flexible height with constraints
+        constraints: BoxConstraints(
+          minHeight: context.sizing.size(120),
+          maxHeight: context.sizing.size(140),
+        ),
+        padding: EdgeInsets.all(context.sizing.m),
         decoration: BoxDecoration(
           color: context.colors.surfaceVariant,
           borderRadius: BorderRadius.circular(context.sizing.radiusL),
@@ -352,6 +374,7 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // Fixed: Use min to prevent overflow
           children: [
             Container(
               padding: EdgeInsets.all(context.sizing.s),
@@ -365,19 +388,27 @@ class _HomeScreenState extends State<HomeScreen>
                 size: context.sizing.iconM,
               ),
             ),
-            SizedBox(height: context.sizing.m),
-            Text(
-              title,
-              style: context.typography.titleS.copyWith(
-                color: AppColors.onSurface,
-                fontWeight: FontWeight.bold,
+            SizedBox(height: context.sizing.s), // Fixed: Reduced spacing
+            Flexible( // Fixed: Make text flexible to prevent overflow
+              child: Text(
+                title,
+                style: context.typography.titleS.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(height: context.sizing.xs),
-            Text(
-              subtitle,
-              style: context.typography.bodyS.copyWith(
-                color: context.colors.surfaceAlpha(0.7),
+            SizedBox(height: context.sizing.xs / 2), // Fixed: Reduced spacing
+            Flexible( // Fixed: Make text flexible to prevent overflow
+              child: Text(
+                subtitle,
+                style: context.typography.bodyS.copyWith(
+                  color: context.colors.surfaceAlpha(0.7),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -609,4 +640,4 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  }
+}
