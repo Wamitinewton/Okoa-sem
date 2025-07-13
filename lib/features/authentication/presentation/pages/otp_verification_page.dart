@@ -2,24 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
-import 'package:okoa_sem/core/enums/otp_enums.dart';
 import 'package:okoa_sem/core/router/route.dart';
-import 'package:okoa_sem/features/otp/presentation/widgets/otp_input_filed.dart';
+import 'package:okoa_sem/features/authentication/presentation/widgets/otp_input_filed.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
-import 'package:okoa_sem/features/otp/presentation/bloc/otp_bloc.dart';
-import 'package:okoa_sem/features/otp/presentation/bloc/otp_event.dart';
-import 'package:okoa_sem/features/otp/presentation/bloc/otp_state.dart';
+import 'package:okoa_sem/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:okoa_sem/features/authentication/presentation/bloc/auth_event.dart';
+import 'package:okoa_sem/features/authentication/presentation/bloc/auth_state.dart';
 
 class OtpVerificationPage extends StatefulWidget {
-  final String email;
-  final OtpType type;
+  final String phone;
+  final String type;
   final String? title;
   final String? subtitle;
 
   const OtpVerificationPage({
     super.key,
-    required this.email,
-    this.type = OtpType.emailVerification,
+    required this.phone,
+    this.type = 'phoneVerification',
     this.title,
     this.subtitle,
   });
@@ -40,7 +39,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     super.initState();
     _initializeAnimations();
     _startAnimations();
-    _sendInitialOtp();
   }
 
   void _initializeAnimations() {
@@ -82,30 +80,18 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     });
   }
 
-  void _sendInitialOtp() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OtpBloc>().add(
-        OtpSendRequested(
-          email: widget.email,
-          type: widget.type,
-        ),
-      );
-    });
-  }
-
   void _handleOtpChanged(String code) {
-    context.read<OtpBloc>().add(OtpCodeChanged(code));
+    context.read<AuthBloc>().add(OtpCodeChanged(code));
   }
 
   void _handleOtpCompleted() {
-    final state = context.read<OtpBloc>().state;
-    if (state.canVerify) {
+    final state = context.read<AuthBloc>().state;
+    if (state.canVerifyOtp) {
       HapticFeedback.lightImpact();
-      context.read<OtpBloc>().add(
-        OtpVerifyRequested(
-          email: widget.email,
-          code: state.code,
-          type: widget.type,
+      context.read<AuthBloc>().add(
+        VerifyPhoneOtpRequested(
+          phoneNumber: widget.phone,
+          otp: state.otpCode,
         ),
       );
     }
@@ -113,17 +99,16 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
 
   void _handleResendOtp() {
     HapticFeedback.mediumImpact();
-    context.read<OtpBloc>().add(
-      OtpResendRequested(
-        email: widget.email,
-        type: widget.type,
+    context.read<AuthBloc>().add(
+      ResendOtpRequested(
+        phoneNumber: widget.phone,
       ),
     );
   }
 
   void _handleVerifyPressed() {
-    final state = context.read<OtpBloc>().state;
-    if (state.canVerify) {
+    final state = context.read<AuthBloc>().state;
+    if (state.canVerifyOtp) {
       _handleOtpCompleted();
     }
   }
@@ -133,27 +118,21 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   String get _displayTitle {
-    return widget.title ?? widget.type.displayName;
+    return widget.title ?? 'Verify Your Phone';
   }
 
   String get _displaySubtitle {
     return widget.subtitle ?? 
-           'We\'ve sent a 6-digit verification code to ${_maskEmail(widget.email)}';
+           'We\'ve sent a 6-digit verification code to ${_maskPhoneNumber(widget.phone)}';
   }
 
-  String _maskEmail(String email) {
-    final parts = email.split('@');
-    if (parts.length != 2) return email;
+  String _maskPhoneNumber(String phone) {
+    if (phone.length < 4) return phone;
     
-    final username = parts[0];
-    final domain = parts[1];
+    final visiblePart = phone.substring(phone.length - 3);
+    final maskedPart = '*' * (phone.length - 3);
     
-    if (username.length <= 2) return email;
-    
-    final maskedUsername = username.substring(0, 2) + 
-                          '*' * (username.length - 2);
-    
-    return '$maskedUsername@$domain';
+    return '$maskedPart$visiblePart';
   }
 
   @override
@@ -171,7 +150,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
           UniversalBackground(animation: _backgroundController),
           
           SafeArea(
-            child: BlocListener<OtpBloc, OtpState>(
+            child: BlocListener<AuthBloc, AuthState>(
               listener: _handleBlocStateChanges,
               child: AnimatedBuilder(
                 animation: _contentController,
@@ -192,14 +171,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
     );
   }
 
-  void _handleBlocStateChanges(BuildContext context, OtpState state) {
-    if (state.status == OtpStatus.verified) {
+  void _handleBlocStateChanges(BuildContext context, AuthState state) {
+    if (state.status == AuthStatus.authenticated) {
       HapticFeedback.heavyImpact();
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Email verified successfully! 🎉',
+            'Phone verified successfully! 🎉',
             style: context.typography.bodyM.copyWith(
               color: AppColors.onPrimary,
             ),
@@ -215,10 +194,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
 
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
-          _navigateToLogin();
+          AppRoute.home.go(context);
         }
       });
-    } else if (state.status == OtpStatus.failed && state.errorMessage != null) {
+    } else if (state.status == AuthStatus.error && state.errorMessage != null) {
       HapticFeedback.mediumImpact();
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -294,7 +273,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
             ],
           ),
           child: Icon(
-            Icons.mark_email_read_outlined,
+            Icons.sms_outlined,
             size: context.sizing.size(48),
             color: AppColors.onPrimary,
           ),
@@ -326,7 +305,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   Widget _buildOtpSection() {
-    return BlocBuilder<OtpBloc, OtpState>(
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         return Container(
           padding: EdgeInsets.all(context.sizing.l),
@@ -351,11 +330,11 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
               SizedBox(height: context.sizing.l),
               
               OtpInputField(
-                value: state.code,
+                value: state.otpCode,
                 onChanged: _handleOtpChanged,
                 onCompleted: _handleOtpCompleted,
-                hasError: state.status.isError,
-                enabled: !state.status.isLoading && state.attemptsLeft > 0,
+                hasError: state.status == AuthStatus.error,
+                enabled: !state.isLoading && state.attemptsLeft > 0,
               ),
               
               if (state.attemptsLeft < 3 && state.attemptsLeft > 0) ...[
@@ -375,7 +354,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   Widget _buildTimerSection() {
-    return BlocBuilder<OtpBloc, OtpState>(
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (!state.isTimerActive) return const SizedBox.shrink();
         
@@ -416,7 +395,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   Widget _buildResendSection() {
-    return BlocBuilder<OtpBloc, OtpState>(
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         return Column(
           children: [
@@ -438,7 +417,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                   vertical: context.sizing.s,
                 ),
               ),
-              child: state.status == OtpStatus.resending
+              child: state.status == AuthStatus.loading
                   ? SizedBox(
                       width: context.sizing.iconS,
                       height: context.sizing.iconS,
@@ -466,14 +445,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
   }
 
   Widget _buildActionButtons() {
-    return BlocBuilder<OtpBloc, OtpState>(
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         return Column(
           children: [
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: state.canVerify ? _handleVerifyPressed : null,
+                onPressed: state.canVerifyOtp ? _handleVerifyPressed : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: context.colors.onPrimary,
@@ -483,10 +462,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(context.sizing.radiusL),
                   ),
-                  elevation: state.canVerify ? 4 : 0,
+                  elevation: state.canVerifyOtp ? 4 : 0,
                   shadowColor: context.colors.primaryAlpha(0.3),
                 ),
-                child: state.status == OtpStatus.verifying
+                child: state.status == AuthStatus.verifying
                     ? SizedBox(
                         height: context.sizing.iconS,
                         width: context.sizing.iconS,

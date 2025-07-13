@@ -102,34 +102,34 @@ class CheckUsernameAvailabilityRequested extends AuthEvent {
 
 class AuthErrorCleared extends AuthEvent {}
 
-class LoginRequested extends AuthEvent {
-  final String emailOrUsername;
-  final String password;
+// OTP related events integrated into auth
+class OtpCodeChanged extends AuthEvent {
+  final String code;
 
-  const LoginRequested({
-    required this.emailOrUsername,
-    required this.password,
-  });
+  const OtpCodeChanged(this.code);
 
   @override
-  List<Object?> get props => [emailOrUsername, password];
+  List<Object?> get props => [code];
 }
 
-class SignupRequested extends AuthEvent {
-  final String username;
-  final String email;
-  final String password;
+class OtpTimerTick extends AuthEvent {
+  final int remainingSeconds;
 
-  const SignupRequested({
-    required this.username,
-    required this.email,
-    required this.password,
-  });
+  const OtpTimerTick(this.remainingSeconds);
 
   @override
-  List<Object?> get props => [username, email, password];
+  List<Object?> get props => [remainingSeconds];
 }
 
-class LogoutRequested extends AuthEvent {}
+class OtpTimerStarted extends AuthEvent {
+  final int durationInSeconds;
 
-class AuthStatusChecked extends AuthEvent {}
+  const OtpTimerStarted({this.durationInSeconds = 300}); // 5 minutes
+
+  @override
+  List<Object?> get props => [durationInSeconds];
+}
+
+class OtpTimerStopped extends AuthEvent {}
+
+class OtpReset extends AuthEvent {}

@@ -33,6 +33,41 @@ class ValidationUtils {
     return null;
   }
 
+  static String? validateKenyanPhoneNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+
+    // Remove all non-digit characters for validation
+    final digits = value.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Check if it starts with country code
+    String localNumber = digits;
+    if (digits.startsWith('254')) {
+      localNumber = digits.substring(3);
+    } else if (digits.startsWith('0')) {
+      localNumber = digits.substring(1);
+    }
+
+    // Validate length (should be 9 digits after removing country code and leading 0)
+    if (localNumber.length != 9) {
+      return 'Please enter a valid Kenyan phone number';
+    }
+
+    // Validate Kenyan mobile number prefixes
+    final validPrefixes = [
+      '70', '71', '72', '73', '74', '75', '76', '77', '78', '79', // Safaricom
+      '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', // Airtel
+    ];
+
+    final prefix = localNumber.substring(0, 2);
+    if (!validPrefixes.contains(prefix)) {
+      return 'Please enter a valid Kenyan mobile number';
+    }
+
+    return null;
+  }
+
   static String? validateEmailOrUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Email or username is required';
@@ -139,6 +174,22 @@ class ValidationUtils {
     
     if (digitsOnly.length > 15) {
       return 'Phone number must be less than 15 digits';
+    }
+    
+    return null;
+  }
+
+  static String? validateOtpCode(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Verification code is required';
+    }
+    
+    if (value.trim().length != 6) {
+      return 'Please enter a 6-digit verification code';
+    }
+    
+    if (!RegExp(r'^\d{6}$').hasMatch(value.trim())) {
+      return 'Verification code must contain only numbers';
     }
     
     return null;

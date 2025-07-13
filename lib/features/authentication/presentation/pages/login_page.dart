@@ -5,6 +5,7 @@ import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
 import 'package:okoa_sem/core/utils/validation_utils.dart'; 
 import '../widgets/custom_input_field.dart';
+import '../widgets/kenyan_phone_field.dart';
 import '../widgets/auth_widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -20,10 +21,13 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
   
   late AnimationController _backgroundController;
+  bool _isPhoneLogin = false;
+  String _phoneNumber = '';
 
   @override
   void initState() {
@@ -40,25 +44,60 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
     _backgroundController.dispose();
     super.dispose();
   }
 
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
-      context.read<AuthBloc>().add(
-        LoginRequested(
-          emailOrUsername: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        ),
-      );
+      if (_isPhoneLogin) {
+        // Login with phone OTP
+        context.read<AuthBloc>().add(
+          SignInWithPhoneRequested(
+            phoneNumber: _phoneNumber,
+          ),
+        );
+      } else {
+        // Login with username/password
+        context.read<AuthBloc>().add(
+          SignInWithPasswordRequested(
+            username: _usernameController.text.trim(),
+            password: _passwordController.text.trim(),
+          ),
+        );
+      }
     }
+  }
+
+  void _toggleLoginMethod() {
+    setState(() {
+      _isPhoneLogin = !_isPhoneLogin;
+    });
+    
+    // Clear form fields when switching
+    _usernameController.clear();
+    _passwordController.clear();
+    _phoneController.clear();
+    _phoneNumber = '';
   }
 
   void _navigateToSignup() {
     AppRoute.signup.go(context);
+  }
+
+  void _navigateToOtpVerification(String phoneNumber) {
+    AppRoute.otpVerification.go(
+      context,
+      queryParameters: {
+        'phone': phoneNumber,
+        'type': 'phoneVerification',
+        'title': 'Sign In Verification',
+        'subtitle': 'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to sign in.',
+      }
+    );
   }
 
   @override
@@ -106,6 +145,24 @@ class _LoginPageState extends State<LoginPage>
                       margin: EdgeInsets.all(context.sizing.m),
                     ),
                   );
+                } else if (state.status == AuthStatus.otpSent) {
+                  _navigateToOtpVerification(_phoneNumber);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Verification code sent! 📱',
+                        style: context.typography.bodyM.copyWith(
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(context.sizing.radiusM),
+                      ),
+                      margin: EdgeInsets.all(context.sizing.m),
+                    ),
+                  );
                 }
               },
               child: SingleChildScrollView(
@@ -121,68 +178,89 @@ class _LoginPageState extends State<LoginPage>
                       subtitle: 'Sign in to continue your academic journey with Okoa Sem',
                     ),
                     
-                    SizedBox(height: context.sizing.xxl),
+                    SizedBox(height: context.sizing.xl),
+                    
+                    // Login method toggle
+                    _buildLoginMethodToggle(),
+                    
+                    SizedBox(height: context.sizing.l),
                     
                     AuthFormContainer(
                       child: Form(
                         key: _formKey,
                         child: Column(
                           children: [
-                            CustomInputField(
-                              label: 'Email or Username',
-                              hintText: 'Enter your email or username',
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              isRequired: true,
-                              validator: ValidationUtils.validateEmailOrUsername,
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                color: context.colors.surfaceAlpha(0.7),
-                                size: context.sizing.iconM,
-                              ),
-                            ),
-                            
-                            SizedBox(height: context.sizing.l),
-                            
-                            CustomInputField(
-                              label: 'Password',
-                              hintText: 'Enter your password',
-                              controller: _passwordController,
-                              isPassword: true,
-                              textInputAction: TextInputAction.done,
-                              isRequired: true,
-                              validator: ValidationUtils.validatePassword,
-                              prefixIcon: Icon(
-                                Icons.lock_outline,
-                                color: context.colors.surfaceAlpha(0.7),
-                                size: context.sizing.iconM,
-                              ),
-                            ),
-                            
-                            SizedBox(height: context.sizing.s),
-                            
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: () {
+                            if (_isPhoneLogin) ...[
+                              KenyanPhoneField(
+                                label: 'Phone Number',
+                                hintText: '712 345 678',
+                                controller: _phoneController,
+                                isRequired: true,
+                                validator: ValidationUtils.validateKenyanPhoneNumber,
+                                onChanged: (phoneNumber) {
+                                  setState(() {
+                                    _phoneNumber = phoneNumber;
+                                  });
                                 },
-                                child: Text(
-                                  'Forgot Password?',
-                                  style: context.typography.bodyS.copyWith(
-                                    color: context.colors.primary,
-                                    fontWeight: FontWeight.w500,
+                              ),
+                            ] else ...[
+                              CustomInputField(
+                                label: 'Username',
+                                hintText: 'Enter your username',
+                                controller: _usernameController,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.next,
+                                isRequired: true,
+                                validator: ValidationUtils.validateUsername,
+                                prefixIcon: Icon(
+                                  Icons.person_outline,
+                                  color: context.colors.surfaceAlpha(0.7),
+                                  size: context.sizing.iconM,
+                                ),
+                              ),
+                              
+                              SizedBox(height: context.sizing.l),
+                              
+                              CustomInputField(
+                                label: 'Password',
+                                hintText: 'Enter your password',
+                                controller: _passwordController,
+                                isPassword: true,
+                                textInputAction: TextInputAction.done,
+                                isRequired: true,
+                                validator: ValidationUtils.validatePassword,
+                                prefixIcon: Icon(
+                                  Icons.lock_outline,
+                                  color: context.colors.surfaceAlpha(0.7),
+                                  size: context.sizing.iconM,
+                                ),
+                              ),
+                              
+                              SizedBox(height: context.sizing.s),
+                              
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // TODO: Implement forgot password
+                                  },
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: context.typography.bodyS.copyWith(
+                                      color: context.colors.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                             
                             SizedBox(height: context.sizing.xl),
                             
                             BlocBuilder<AuthBloc, AuthState>(
                               builder: (context, state) {
                                 return AuthButton(
-                                  text: 'Sign In',
+                                  text: _isPhoneLogin ? 'Send Code' : 'Sign In',
                                   onPressed: _handleLogin,
                                   isLoading: state.status == AuthStatus.loading,
                                 );
@@ -208,6 +286,107 @@ class _LoginPageState extends State<LoginPage>
                     ),
                     
                     SizedBox(height: context.sizing.l),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoginMethodToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colors.surfaceVariant.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(context.sizing.radiusL),
+        border: Border.all(
+          color: context.colors.border,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (_isPhoneLogin) _toggleLoginMethod();
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: context.sizing.s,
+                ),
+                decoration: BoxDecoration(
+                  color: !_isPhoneLogin 
+                      ? context.colors.primary 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(context.sizing.radiusL),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: context.sizing.iconS,
+                      color: !_isPhoneLogin 
+                          ? context.colors.onPrimary 
+                          : context.colors.surfaceAlpha(0.7),
+                    ),
+                    SizedBox(width: context.sizing.xs),
+                    Text(
+                      'Username',
+                      style: context.typography.labelM.copyWith(
+                        color: !_isPhoneLogin 
+                            ? context.colors.onPrimary 
+                            : context.colors.surfaceAlpha(0.7),
+                        fontWeight: !_isPhoneLogin 
+                            ? FontWeight.w600 
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (!_isPhoneLogin) _toggleLoginMethod();
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: context.sizing.s,
+                ),
+                decoration: BoxDecoration(
+                  color: _isPhoneLogin 
+                      ? context.colors.primary 
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(context.sizing.radiusL),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.phone_outlined,
+                      size: context.sizing.iconS,
+                      color: _isPhoneLogin 
+                          ? context.colors.onPrimary 
+                          : context.colors.surfaceAlpha(0.7),
+                    ),
+                    SizedBox(width: context.sizing.xs),
+                    Text(
+                      'Phone',
+                      style: context.typography.labelM.copyWith(
+                        color: _isPhoneLogin 
+                            ? context.colors.onPrimary 
+                            : context.colors.surfaceAlpha(0.7),
+                        fontWeight: _isPhoneLogin 
+                            ? FontWeight.w600 
+                            : FontWeight.normal,
+                      ),
+                    ),
                   ],
                 ),
               ),

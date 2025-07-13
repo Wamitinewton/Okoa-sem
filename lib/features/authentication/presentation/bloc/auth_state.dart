@@ -9,6 +9,7 @@ enum AuthStatus {
   error,
   otpSent,
   verifying,
+  otpExpired,
 }
 
 class AuthState extends Equatable {
@@ -20,6 +21,11 @@ class AuthState extends Equatable {
   final String? refreshToken;
   final bool? usernameAvailable;
   final String? usernameError;
+  
+  final String otpCode;
+  final int remainingSeconds;
+  final bool canResendOtp;
+  final int attemptsLeft;
 
   const AuthState({
     this.status = AuthStatus.initial,
@@ -30,6 +36,10 @@ class AuthState extends Equatable {
     this.refreshToken,
     this.usernameAvailable,
     this.usernameError,
+    this.otpCode = '',
+    this.remainingSeconds = 0,
+    this.canResendOtp = false,
+    this.attemptsLeft = 3,
   });
 
   bool get isAuthenticated => status == AuthStatus.authenticated && user != null;
@@ -39,6 +49,24 @@ class AuthState extends Equatable {
   bool get hasError => status == AuthStatus.error && errorMessage != null;
   
   bool get otpSent => status == AuthStatus.otpSent;
+  
+  bool get isOtpComplete => otpCode.length == 6;
+  
+  bool get isTimerActive => remainingSeconds > 0;
+  
+  bool get canVerifyOtp => isOtpComplete && 
+                          status != AuthStatus.verifying && 
+                          attemptsLeft > 0;
+  
+  bool get canRequestResend => canResendOtp && 
+                              status != AuthStatus.loading && 
+                              !isTimerActive;
+
+  String get formattedTimeRemaining {
+    final minutes = remainingSeconds ~/ 60;
+    final seconds = remainingSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
 
   AuthState copyWith({
     AuthStatus? status,
@@ -49,6 +77,10 @@ class AuthState extends Equatable {
     String? refreshToken,
     bool? usernameAvailable,
     String? usernameError,
+    String? otpCode,
+    int? remainingSeconds,
+    bool? canResendOtp,
+    int? attemptsLeft,
   }) {
     return AuthState(
       status: status ?? this.status,
@@ -59,11 +91,25 @@ class AuthState extends Equatable {
       refreshToken: refreshToken ?? this.refreshToken,
       usernameAvailable: usernameAvailable ?? this.usernameAvailable,
       usernameError: usernameError,
+      otpCode: otpCode ?? this.otpCode,
+      remainingSeconds: remainingSeconds ?? this.remainingSeconds,
+      canResendOtp: canResendOtp ?? this.canResendOtp,
+      attemptsLeft: attemptsLeft ?? this.attemptsLeft,
     );
   }
 
   AuthState clearError() {
     return copyWith(errorMessage: null, usernameError: null);
+  }
+
+  AuthState clearOtp() {
+    return copyWith(
+      otpCode: '',
+      remainingSeconds: 0,
+      canResendOtp: false,
+      attemptsLeft: 3,
+      status: status == AuthStatus.otpSent || status == AuthStatus.verifying ? AuthStatus.initial : status,
+    );
   }
 
   @override
@@ -76,5 +122,9 @@ class AuthState extends Equatable {
     refreshToken,
     usernameAvailable,
     usernameError,
+    otpCode,
+    remainingSeconds,
+    canResendOtp,
+    attemptsLeft,
   ];
 }

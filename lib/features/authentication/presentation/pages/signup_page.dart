@@ -5,6 +5,7 @@ import 'package:okoa_sem/core/utils/validation_utils.dart';
 import 'package:okoa_sem/shared/widgets/universal_background.dart';
 import 'package:okoa_sem/core/router/route.dart';
 import '../widgets/custom_input_field.dart';
+import '../widgets/kenyan_phone_field.dart';
 import '../widgets/auth_widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -21,10 +22,11 @@ class _SignupPageState extends State<SignupPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   late AnimationController _backgroundController;
+  String _phoneNumber = '';
 
   @override
   void initState() {
@@ -42,7 +44,7 @@ class _SignupPageState extends State<SignupPage>
   @override
   void dispose() {
     _usernameController.dispose();
-    _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _backgroundController.dispose();
     super.dispose();
@@ -51,9 +53,9 @@ class _SignupPageState extends State<SignupPage>
   void _handleSignup() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(
-        SignupRequested(
+        SignupWithPhoneRequested(
+          phoneNumber: _phoneNumber,
           username: _usernameController.text.trim(),
-          email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         ),
       );
@@ -64,14 +66,14 @@ class _SignupPageState extends State<SignupPage>
     AppRoute.login.go(context);
   }
 
-  void _navigateToOtpVerification(String email) {
+  void _navigateToOtpVerification(String phoneNumber) {
     AppRoute.otpVerification.go(
       context,
       queryParameters: {
-        'email': email,
-        'type': 'emailVerification',
-        'title': 'Verify Your Email',
-        'subtitle': 'We\'ve sent a 6-digit verification code to $email. Please enter it below to complete your registration.',
+        'phone': phoneNumber,
+        'type': 'phoneVerification',
+        'title': 'Verify Your Phone',
+        'subtitle': 'We\'ve sent a 6-digit verification code to $phoneNumber. Please enter it below to complete your registration.',
       }
     );
   }
@@ -105,12 +107,12 @@ class _SignupPageState extends State<SignupPage>
                       margin: EdgeInsets.all(context.sizing.m),
                     ),
                   );
-                } else if (state.status == AuthStatus.authenticated) {
-                  _navigateToOtpVerification(_emailController.text.trim());
+                } else if (state.status == AuthStatus.otpSent) {
+                  _navigateToOtpVerification(_phoneNumber);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Account created successfully! 🎉',
+                        'Verification code sent! 📱',
                         style: context.typography.bodyM.copyWith(
                           color: AppColors.onPrimary,
                         ),
@@ -165,19 +167,17 @@ class _SignupPageState extends State<SignupPage>
 
                             SizedBox(height: context.sizing.l),
 
-                            CustomInputField(
-                              label: 'Email',
-                              hintText: 'Enter your email address',
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
+                            KenyanPhoneField(
+                              label: 'Phone Number',
+                              hintText: '712 345 678',
+                              controller: _phoneController,
                               isRequired: true,
-                              validator: ValidationUtils.validateEmail,
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: context.colors.surfaceAlpha(0.7),
-                                size: context.sizing.iconM,
-                              ),
+                              validator: ValidationUtils.validateKenyanPhoneNumber,
+                              onChanged: (phoneNumber) {
+                                setState(() {
+                                  _phoneNumber = phoneNumber;
+                                });
+                              },
                             ),
 
                             SizedBox(height: context.sizing.l),

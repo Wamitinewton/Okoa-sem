@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:okoa_sem/core/config/app_config.dart';
-import 'package:okoa_sem/features/otp/presentation/widgets/otp_input_cell.dart';
+import 'package:okoa_sem/features/authentication/presentation/widgets/otp_input_cell.dart';
 
 class OtpInputField extends StatefulWidget {
   final String value;

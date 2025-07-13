@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:okoa_sem/features/authentication/domain/usecases/sign_up_use_case.dart';
 import 'package:okoa_sem/features/authentication/domain/usecases/verifiy_phone_use_case.dart';
@@ -23,6 +24,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RefreshSessionUseCase _refreshSessionUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
   final CheckUsernameAvailabilityUseCase _checkUsernameAvailabilityUseCase;
+
+  Timer? _otpTimer;
 
   AuthBloc({
     required SignUpUseCase signUpUseCase,
@@ -57,6 +60,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<UpdateProfileRequested>(_onUpdateProfileRequested);
     on<CheckUsernameAvailabilityRequested>(_onCheckUsernameAvailabilityRequested);
     on<AuthErrorCleared>(_onAuthErrorCleared);
+    
+    // OTP related events
+    on<OtpCodeChanged>(_onOtpCodeChanged);
+    on<OtpTimerTick>(_onOtpTimerTick);
+    on<OtpTimerStarted>(_onOtpTimerStarted);
+    on<OtpTimerStopped>(_onOtpTimerStopped);
+    on<OtpReset>(_onOtpReset);
   }
 
   Future<void> _onSignupWithPhoneRequested(
@@ -76,10 +86,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       )),
-      (_) => emit(state.copyWith(
-        status: AuthStatus.otpSent,
-        phoneNumber: event.phoneNumber,
-      )),
+      (_) {
+        emit(state.copyWith(
+          status: AuthStatus.otpSent,
+          phoneNumber: event.phoneNumber,
+          canResendOtp: false,
+          attemptsLeft: 3,
+          otpCode: '',
+        ));
+        
+        add(const OtpTimerStarted());
+      },
     );
   }
 
@@ -87,6 +104,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     VerifyPhoneOtpRequested event,
     Emitter<AuthState> emit,
   ) async {
+    if (state.otpCode.length != 6) {
+      emit(state.copyWith(
+        errorMessage: 'Please enter a complete 6-digit code',
+      ));
+      return;
+    }
+
     emit(state.copyWith(status: AuthStatus.verifying));
 
     final result = await _verifyPhoneUseCase(
@@ -95,16 +119,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      )),
-      (authResponse) => emit(state.copyWith(
-        status: AuthStatus.authenticated,
-        user: authResponse.user,
-        accessToken: authResponse.accessToken,
-        refreshToken: authResponse.refreshToken,
-      )),
+      (failure) {
+        final newAttemptsLeft = state.attemptsLeft - 1;
+        emit(state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message,
+          attemptsLeft: newAttemptsLeft,
+          canResendOtp: newAttemptsLeft <= 0,
+        ));
+      },
+      (authResponse) {
+        _otpTimer?.cancel();
+        emit(state.copyWith(
+          status: AuthStatus.authenticated,
+          user: authResponse.user,
+          accessToken: authResponse.accessToken,
+          refreshToken: authResponse.refreshToken,
+          remainingSeconds: 0,
+        ));
+      },
     );
   }
 
@@ -123,10 +156,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       )),
-      (_) => emit(state.copyWith(
-        status: AuthStatus.otpSent,
-        phoneNumber: event.phoneNumber,
-      )),
+      (_) {
+        emit(state.copyWith(
+          status: AuthStatus.otpSent,
+          phoneNumber: event.phoneNumber,
+          canResendOtp: false,
+          attemptsLeft: 3,
+          otpCode: '',
+        ));
+        
+        add(const OtpTimerStarted());
+      },
     );
   }
 
@@ -169,10 +209,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (failure) => emit(state.copyWith(
         status: AuthStatus.error,
         errorMessage: failure.message,
+        canResendOtp: true,
       )),
-      (_) => emit(state.copyWith(
-        status: AuthStatus.otpSent,
-      )),
+      (_) {
+        emit(state.copyWith(
+          status: AuthStatus.otpSent,
+          canResendOtp: false,
+          attemptsLeft: 3,
+          otpCode: '',
+        ));
+        
+        add(const OtpTimerStarted());
+      },
     );
   }
 
@@ -189,7 +237,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       )),
-      (_) => emit(const AuthState(status: AuthStatus.unauthenticated)),
+      (_) {
+        _otpTimer?.cancel();
+        emit(const AuthState(status: AuthStatus.unauthenticated));
+      },
     );
   }
 
@@ -289,5 +340,77 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) {
     emit(state.copyWith(errorMessage: null));
+  }
+
+  // OTP related event handlers
+  void _onOtpCodeChanged(
+    OtpCodeChanged event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(state.copyWith(
+      otpCode: event.code,
+      errorMessage: null,
+    ));
+  }
+
+  void _onOtpTimerTick(
+    OtpTimerTick event,
+    Emitter<AuthState> emit,
+  ) {
+    if (event.remainingSeconds <= 0) {
+      _otpTimer?.cancel();
+      emit(state.copyWith(
+        remainingSeconds: 0,
+        canResendOtp: true,
+        status: state.status == AuthStatus.otpSent ? AuthStatus.otpExpired : state.status,
+      ));
+    } else {
+      emit(state.copyWith(remainingSeconds: event.remainingSeconds));
+    }
+  }
+
+  void _onOtpTimerStarted(
+    OtpTimerStarted event,
+    Emitter<AuthState> emit,
+  ) {
+    _otpTimer?.cancel();
+    
+    emit(state.copyWith(
+      remainingSeconds: event.durationInSeconds,
+      canResendOtp: false,
+    ));
+
+    _otpTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (timer) {
+        final remaining = state.remainingSeconds - 1;
+        add(OtpTimerTick(remaining));
+      },
+    );
+  }
+
+  void _onOtpTimerStopped(
+    OtpTimerStopped event,
+    Emitter<AuthState> emit,
+  ) {
+    _otpTimer?.cancel();
+    emit(state.copyWith(
+      remainingSeconds: 0,
+      canResendOtp: true,
+    ));
+  }
+
+  void _onOtpReset(
+    OtpReset event,
+    Emitter<AuthState> emit,
+  ) {
+    _otpTimer?.cancel();
+    emit(state.clearOtp());
+  }
+
+  @override
+  Future<void> close() {
+    _otpTimer?.cancel();
+    return super.close();
   }
 }
